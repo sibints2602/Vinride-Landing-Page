@@ -33,6 +33,15 @@ type AnchorButtonProps = ButtonOwnProps &
 type NativeButtonProps = ButtonOwnProps &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonOwnProps> & {
     href?: undefined;
+    // Anchor-only attributes, explicitly rejected so the weak-union-type hole
+    // (a prop "known" on one constituent is otherwise treated as known on
+    // all constituents) can't let them silently attach to a <button>.
+    target?: never;
+    rel?: never;
+    download?: never;
+    hrefLang?: never;
+    ping?: never;
+    referrerPolicy?: never;
   };
 
 // Discriminated on `href`: pass it and you get honest anchor props
