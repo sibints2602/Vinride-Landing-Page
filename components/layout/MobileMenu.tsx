@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { HERO, NAV_LINKS } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { cn } from "@/lib/utils";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -99,58 +100,83 @@ export function MobileMenu() {
         <Icon name="menu" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-ink/50"
-            aria-hidden="true"
-            onClick={close}
-          />
-          <div
-            ref={panelRef}
-            id={panelId}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu"
-            tabIndex={-1}
-            className="absolute inset-y-0 right-0 flex h-full w-full max-w-xs flex-col gap-8 overflow-y-auto bg-surface p-6 shadow-sm"
-          >
-            <div className="flex items-center justify-end">
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-fg-muted hover:text-fg"
-                aria-label="Close menu"
-                onClick={close}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-
-            <nav aria-label="Primary" className="flex flex-col gap-6">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={close}
-                  className="text-lg font-medium text-fg-muted transition-colors duration-200 hover:text-fg"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-
-            <Button
-              href={HERO.primaryCta.href}
-              variant="primary"
-              size="lg"
+      {/*
+        Always mounted (rather than `{open && (...)}`) so the slide/fade can
+        animate on both open AND close — an unmounted node has nothing to
+        transition on exit. `inert` when closed removes the whole subtree
+        from the tab order and the accessibility tree at the platform level
+        (stronger than aria-hidden alone, and it can't be defeated by a
+        stray tabIndex), and `pointer-events-none` stops the full-viewport
+        wrapper from swallowing clicks meant for content behind it while
+        hidden. Visibility itself is driven by transform/opacity so the
+        transition can play; duration/easing come from token utility
+        classes only (no inline styles), so the reduced-motion override in
+        globals.css (which collapses `transition-duration` via `!important`)
+        still applies.
+      */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 md:hidden",
+          open ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        inert={!open}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-ink/50 transition-opacity duration-300 ease-out",
+            open ? "opacity-100" : "opacity-0",
+          )}
+          aria-hidden="true"
+          onClick={close}
+        />
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          aria-hidden={!open}
+          tabIndex={-1}
+          className={cn(
+            "absolute inset-y-0 right-0 flex h-full w-full max-w-xs flex-col gap-8 overflow-y-auto bg-surface p-6 shadow-sm transition-transform duration-300 ease-out",
+            open ? "translate-x-0" : "translate-x-full",
+          )}
+        >
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-fg-muted hover:text-fg"
+              aria-label="Close menu"
               onClick={close}
-              className="mt-auto"
             >
-              {HERO.primaryCta.label}
-            </Button>
+              <Icon name="close" />
+            </button>
           </div>
+
+          <nav aria-label="Primary" className="flex flex-col gap-6">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={close}
+                className="text-lg font-medium text-fg-muted transition-colors duration-200 hover:text-fg"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <Button
+            href={HERO.primaryCta.href}
+            variant="primary"
+            size="lg"
+            onClick={close}
+            className="mt-auto"
+          >
+            {HERO.primaryCta.label}
+          </Button>
         </div>
-      )}
+      </div>
     </>
   );
 }
