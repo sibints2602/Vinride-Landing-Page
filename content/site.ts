@@ -76,12 +76,15 @@ export const HERO = {
 
 export const ESTIMATOR = {
   heading: "Check your fare",
+  rideTypeGroupLabel: "Ride type",
   pickupLabel: "Pickup",
   pickupPlaceholder: "Enter a pickup point",
   dropLabel: "Drop",
   dropPlaceholder: "Where to?",
   submitLabel: "Get estimate",
   resultPrefix: "Estimated fare",
+  distanceLabel: (km: number) => `${km} km`,
+  etaLabel: (minutes: number) => `~${minutes} min`,
   demoNote: "Demo estimate — this does not book a ride.",
   errors: {
     pickupRequired: "Add a pickup point.",

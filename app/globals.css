@@ -30,6 +30,9 @@
      #ffffff and 4.99:1 on #fafaf8, clearing AA on both surfaces. */
   --link: #087b63;
   --ring: #087b63;
+  /* #ef7d00 (brand amber) is only 2.76:1 on white and fails AA for error text.
+     This is 6.57:1 on #ffffff and 6.29:1 on #fafaf8, clearing AA on both surfaces. */
+  --danger: #b42318;
 }
 
 [data-theme="dark"] {
@@ -41,6 +44,8 @@
   --line: #2a3532;
   --link: var(--color-brand-green-strong);
   --ring: var(--color-brand-green-strong);
+  /* 8.75:1 on #161e1b and 9.59:1 on #0e1412, clearing AA on both surfaces. */
+  --danger: #fda29b;
 }
 
 @theme inline {
@@ -51,6 +56,7 @@
   --color-fg-muted: var(--fg-muted);
   --color-line: var(--line);
   --color-link: var(--link);
+  --color-danger: var(--danger);
 }
 
 @layer base {

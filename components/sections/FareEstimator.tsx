@@ -9,12 +9,7 @@ import {
   VEHICLE_TYPES,
   type VehicleTypeId,
 } from "@/content/site";
-import {
-  estimateFare,
-  InvalidRouteError,
-  UnknownVehicleError,
-  type FareEstimate,
-} from "@/lib/fare";
+import { estimateFare, type FareEstimate } from "@/lib/fare";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 
@@ -25,13 +20,23 @@ interface EstimatorError {
   message: string;
 }
 
-const LOCALITIES_DATALIST_ID = "vinride-localities";
+/**
+ * Mirrors normalise() in lib/fare.ts (trim, lowercase, collapse internal
+ * whitespace) so the same-location check here agrees with the check
+ * estimateFare performs internally. Duplicated rather than imported because
+ * lib/fare.ts does not currently export it; if that ever changes, prefer
+ * importing the shared helper instead of keeping this in sync by hand.
+ */
+function normaliseForComparison(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
 
 export function FareEstimator() {
   const uid = useId();
   const pickupInputId = `${uid}-pickup`;
   const dropInputId = `${uid}-drop`;
   const errorId = `${uid}-error`;
+  const localitiesDatalistId = `${uid}-localities`;
 
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
@@ -42,23 +47,21 @@ export function FareEstimator() {
   /**
    * Runs the (already-validated) route through estimateFare. The try/catch
    * here is defensive: our own validation above already rejects blank or
-   * identical pickup/drop before this is ever called, so InvalidRouteError
-   * should be unreachable, and vehicleId always comes from VEHICLE_TYPES so
-   * UnknownVehicleError should be unreachable too. Still, estimateFare's
-   * contract says it throws, and a raw Error/NaN must never reach the DOM.
+   * identical pickup/drop before this is ever called, so estimateFare's own
+   * InvalidRouteError should be unreachable, and vehicleId always comes from
+   * VEHICLE_TYPES so its UnknownVehicleError should be unreachable too. Every
+   * thrown value — including anything unexpected — deliberately resolves to
+   * the same friendly fallback message, so no raw error message or NaN can
+   * ever reach the DOM.
    */
   function computeEstimate(vehicle: VehicleTypeId, from: string, to: string) {
     try {
       const estimate = estimateFare(vehicle, from, to);
       setResult(estimate);
       setError(null);
-    } catch (err) {
+    } catch {
       setResult(null);
-      if (err instanceof InvalidRouteError || err instanceof UnknownVehicleError) {
-        setError({ field: "both", message: ESTIMATOR.errors.generic });
-      } else {
-        setError({ field: "both", message: ESTIMATOR.errors.generic });
-      }
+      setError({ field: "both", message: ESTIMATOR.errors.generic });
     }
   }
 
@@ -78,7 +81,7 @@ export function FareEstimator() {
       setError({ field: "drop", message: ESTIMATOR.errors.dropRequired });
       return;
     }
-    if (trimmedPickup.toLowerCase() === trimmedDrop.toLowerCase()) {
+    if (normaliseForComparison(trimmedPickup) === normaliseForComparison(trimmedDrop)) {
       setResult(null);
       setError({ field: "both", message: ESTIMATOR.errors.sameLocation });
       return;
@@ -104,7 +107,7 @@ export function FareEstimator() {
       <h2 className="font-display text-xl text-fg">{ESTIMATOR.heading}</h2>
 
       <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-5">
-        <div role="group" aria-label="Ride type" className="flex flex-wrap gap-2">
+        <div role="group" aria-label={ESTIMATOR.rideTypeGroupLabel} className="flex flex-wrap gap-2">
           {VEHICLE_TYPES.map((vehicle) => (
             <Chip
               key={vehicle.id}
@@ -124,7 +127,7 @@ export function FareEstimator() {
             <input
               id={pickupInputId}
               type="text"
-              list={LOCALITIES_DATALIST_ID}
+              list={localitiesDatalistId}
               value={pickup}
               onChange={(event) => setPickup(event.target.value)}
               placeholder={ESTIMATOR.pickupPlaceholder}
@@ -141,7 +144,7 @@ export function FareEstimator() {
             <input
               id={dropInputId}
               type="text"
-              list={LOCALITIES_DATALIST_ID}
+              list={localitiesDatalistId}
               value={drop}
               onChange={(event) => setDrop(event.target.value)}
               placeholder={ESTIMATOR.dropPlaceholder}
@@ -156,14 +159,14 @@ export function FareEstimator() {
           </Button>
         </div>
 
-        <datalist id={LOCALITIES_DATALIST_ID}>
+        <datalist id={localitiesDatalistId}>
           {LOCALITIES.map((locality) => (
             <option key={locality} value={locality} />
           ))}
         </datalist>
 
         {error && (
-          <p id={errorId} role="alert" className="text-sm font-medium text-brand-amber">
+          <p id={errorId} role="alert" className="text-sm font-medium text-danger">
             {error.message}
           </p>
         )}
@@ -178,7 +181,7 @@ export function FareEstimator() {
             {result.high}
           </p>
           <p className="mt-1 text-sm text-fg-muted">
-            {result.distanceKm} km &middot; ~{result.etaMinutes} min
+            {ESTIMATOR.distanceLabel(result.distanceKm)} &middot; {ESTIMATOR.etaLabel(result.etaMinutes)}
           </p>
           <p className="mt-4 text-xs text-fg-muted">{ESTIMATOR.demoNote}</p>
           <p className="mt-1 text-xs text-fg-muted">{DISCLAIMER}</p>
