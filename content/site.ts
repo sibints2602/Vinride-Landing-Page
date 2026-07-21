@@ -97,6 +97,8 @@ export const HERO = {
     "Bikes, autos, sedans and SUVs — matched in seconds, priced upfront. No surge surprises, no haggling.",
   primaryCta: { label: "Get the app", href: "#download" },
   secondaryCta: { label: "Drive with us", href: "#drive" },
+  /** Accessible name for the icon-only scroll cue at the foot of the hero. */
+  scrollCueLabel: "Scroll to ride types",
 } as const;
 
 export const ESTIMATOR = {

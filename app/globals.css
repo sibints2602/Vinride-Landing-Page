@@ -16,16 +16,6 @@
   --color-brand-forest: #123d2f;
   /* Near-black. The ONLY permitted text color on a yellow or amber fill. */
   --color-ink: #14100b;
-
-  /* ---- Hero "stage" ----
-     `public/Cars Pics.png` is NOT a cutout: it ships with an opaque
-     rgb(42, 42, 42) rounded rectangle baked into it. --color-stage is that
-     exact value, so the panel the image sits in extends it seamlessly rather
-     than showing a grey slab floating on the page. Do not change it without
-     re-sampling the asset. Deliberately identical in both themes — the stage
-     is a dark showroom plate in light mode too. */
-  --color-stage: #2a2a2a;
-  --color-stage-line: #3d3d3d;
 }
 
 /* ---- Theme-dependent surfaces ---- */

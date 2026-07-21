@@ -21,6 +21,18 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   shield: <path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3Z" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </>
+  ),
+  "arrow-down": (
+    <>
+      <path d="M12 4.5v15" />
+      <path d="m6 13.5 6 6 6-6" />
+    </>
+  ),
   headset: (
     <>
       <path d="M4 12a8 8 0 0 1 16 0" />

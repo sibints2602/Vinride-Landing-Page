@@ -13,7 +13,7 @@ import { estimateFare, type FareEstimate } from "@/lib/fare";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { Chip } from "@/components/ui/Chip";
-import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 
 type ErrorField = "pickup" | "drop" | "both";
 
@@ -144,12 +144,22 @@ export function FareEstimator() {
   const pickupInvalid = error?.field === "pickup" || error?.field === "both";
   const dropInvalid = error?.field === "drop" || error?.field === "both";
 
+  // Borderless field inside the bar. No focus:outline-none — the pill has no
+  // per-field border, so the global :focus-visible ring is the only thing
+  // marking which segment has focus.
+  const fieldInput =
+    "mt-0.5 w-full rounded-sm border-0 bg-transparent p-0 text-sm text-fg placeholder:text-fg-muted";
+
   return (
     <div>
-      <h2 className="font-display text-xl text-fg">{ESTIMATOR.heading}</h2>
+      <h2 className="sr-only">{ESTIMATOR.heading}</h2>
 
-      <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-5">
-        <div role="group" aria-label={ESTIMATOR.rideTypeGroupLabel} className="flex flex-wrap gap-2">
+      <form onSubmit={handleSubmit} noValidate>
+        <div
+          role="group"
+          aria-label={ESTIMATOR.rideTypeGroupLabel}
+          className="flex flex-wrap justify-center gap-2"
+        >
           {VEHICLE_TYPES.map((vehicle) => (
             <Chip
               key={vehicle.id}
@@ -161,44 +171,68 @@ export function FareEstimator() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-          <div className="flex-1">
-            <label htmlFor={pickupInputId} className="block text-sm font-medium text-fg">
-              {ESTIMATOR.pickupLabel}
-            </label>
-            <input
-              id={pickupInputId}
-              type="text"
-              list={localitiesDatalistId}
-              value={pickup}
-              onChange={(event) => handlePickupChange(event.target.value)}
-              placeholder={ESTIMATOR.pickupPlaceholder}
-              aria-invalid={pickupInvalid || undefined}
-              aria-describedby={pickupInvalid ? errorId : undefined}
-              className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3.5 text-sm text-fg placeholder:text-fg-muted"
-            />
-          </div>
+        {/* Rounded-3xl until the segments can sit on one row: a fully rounded
+            pill around a stacked column would bow its own edges away from the
+            fields inside it. */}
+        <div className="mt-6 rounded-3xl border border-line bg-surface p-2 shadow-lift-lg sm:rounded-full">
+          <div className="flex flex-col sm:flex-row sm:items-center">
+            <div className="flex-1 px-4 py-2.5 sm:px-6">
+              <label
+                htmlFor={pickupInputId}
+                className="block text-xs font-medium text-fg-muted"
+              >
+                {ESTIMATOR.pickupLabel}
+              </label>
+              <input
+                id={pickupInputId}
+                type="text"
+                list={localitiesDatalistId}
+                value={pickup}
+                onChange={(event) => handlePickupChange(event.target.value)}
+                placeholder={ESTIMATOR.pickupPlaceholder}
+                aria-invalid={pickupInvalid || undefined}
+                aria-describedby={pickupInvalid ? errorId : undefined}
+                className={fieldInput}
+              />
+            </div>
 
-          <div className="flex-1">
-            <label htmlFor={dropInputId} className="block text-sm font-medium text-fg">
-              {ESTIMATOR.dropLabel}
-            </label>
-            <input
-              id={dropInputId}
-              type="text"
-              list={localitiesDatalistId}
-              value={drop}
-              onChange={(event) => handleDropChange(event.target.value)}
-              placeholder={ESTIMATOR.dropPlaceholder}
-              aria-invalid={dropInvalid || undefined}
-              aria-describedby={dropInvalid ? errorId : undefined}
-              className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3.5 text-sm text-fg placeholder:text-fg-muted"
+            <div
+              aria-hidden="true"
+              className="mx-4 h-px bg-line sm:mx-0 sm:h-10 sm:w-px"
             />
-          </div>
 
-          <Button type="submit" variant="primary" size="lg" className="w-full lg:w-auto">
-            {ESTIMATOR.submitLabel}
-          </Button>
+            <div className="flex-1 px-4 py-2.5 sm:px-6">
+              <label
+                htmlFor={dropInputId}
+                className="block text-xs font-medium text-fg-muted"
+              >
+                {ESTIMATOR.dropLabel}
+              </label>
+              <input
+                id={dropInputId}
+                type="text"
+                list={localitiesDatalistId}
+                value={drop}
+                onChange={(event) => handleDropChange(event.target.value)}
+                placeholder={ESTIMATOR.dropPlaceholder}
+                aria-invalid={dropInvalid || undefined}
+                aria-describedby={dropInvalid ? errorId : undefined}
+                className={fieldInput}
+              />
+            </div>
+
+            {/* Icon-only once the bar is a single row, where the two labelled
+                fields beside it make the intent obvious; below that the label
+                is visible, since a lone circle at the foot of a stacked form
+                reads as decoration. */}
+            <button
+              type="submit"
+              className="mt-2 flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber sm:mt-0 sm:w-12"
+            >
+              <Icon name="search" />
+              <span className="sm:sr-only">{ESTIMATOR.submitLabel}</span>
+            </button>
+          </div>
         </div>
 
         <datalist id={localitiesDatalistId}>
@@ -208,7 +242,11 @@ export function FareEstimator() {
         </datalist>
 
         {error && (
-          <p id={errorId} role="alert" className="text-sm font-medium text-danger">
+          <p
+            id={errorId}
+            role="alert"
+            className="mt-4 text-center text-sm font-medium text-danger"
+          >
             {error.message}
           </p>
         )}
@@ -223,12 +261,15 @@ export function FareEstimator() {
           show. */}
       <div
         aria-live="polite"
-        className={cn("rounded-xl", result && "mt-6 border border-line bg-surface-2 p-5")}
+        className={cn(
+          "rounded-2xl",
+          result && "mx-auto mt-6 max-w-md border border-line bg-surface p-5 text-center shadow-lift",
+        )}
       >
         {result && (
           <>
             <p className="text-sm text-fg-muted">{ESTIMATOR.resultPrefix}</p>
-            <p className="mt-1 font-display text-2xl text-fg">
+            <p className="mt-1 font-display text-3xl text-fg">
               {formatCurrency(result.low, BRAND.currencySymbol)} – {formatCurrency(result.high, BRAND.currencySymbol)}
             </p>
             <p className="mt-1 text-sm text-fg-muted">
