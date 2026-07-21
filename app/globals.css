@@ -16,6 +16,16 @@
   --color-brand-forest: #123d2f;
   /* Near-black. The ONLY permitted text color on a yellow or amber fill. */
   --color-ink: #14100b;
+
+  /* ---- Hero "stage" ----
+     `public/Cars Pics.png` is NOT a cutout: it ships with an opaque
+     rgb(42, 42, 42) rounded rectangle baked into it. --color-stage is that
+     exact value, so the panel the image sits in extends it seamlessly rather
+     than showing a grey slab floating on the page. Do not change it without
+     re-sampling the asset. Deliberately identical in both themes — the stage
+     is a dark showroom plate in light mode too. */
+  --color-stage: #2a2a2a;
+  --color-stage-line: #3d3d3d;
 }
 
 /* ---- Theme-dependent surfaces ---- */
@@ -33,6 +43,10 @@
   /* #ef7d00 (brand amber) is only 2.76:1 on white and fails AA for error text.
      This is 6.57:1 on #ffffff and 6.29:1 on #fafaf8, clearing AA on both surfaces. */
   --danger: #b42318;
+  /* Elevation. Tinted with the ink hue rather than pure black so lifted
+     surfaces read warm against the off-white canvas. */
+  --lift: 0 10px 30px -12px rgb(20 16 11 / 0.16);
+  --lift-lg: 0 30px 70px -28px rgb(20 16 11 / 0.28);
 }
 
 [data-theme="dark"] {
@@ -46,6 +60,10 @@
   --ring: var(--color-brand-green-strong);
   /* 8.75:1 on #161e1b and 9.59:1 on #0e1412, clearing AA on both surfaces. */
   --danger: #fda29b;
+  /* A warm-tinted shadow is invisible on a near-black canvas; go opaque black
+     and deeper so elevation still reads. */
+  --lift: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  --lift-lg: 0 30px 70px -28px rgb(0 0 0 / 0.75);
 }
 
 @theme inline {
@@ -57,13 +75,17 @@
   --color-line: var(--line);
   --color-link: var(--link);
   --color-danger: var(--danger);
+  --shadow-lift: var(--lift);
+  --shadow-lift-lg: var(--lift-lg);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* Sticky nav is 4rem tall; keeps anchor targets from hiding beneath it. */
-    scroll-padding-top: 5rem;
+    /* The floating nav pill is 4rem tall and sits 1rem below the viewport top,
+       so it occupies the first 5rem; the extra 1.5rem is breathing room so a
+       jumped-to heading isn't flush against it. */
+    scroll-padding-top: 6.5rem;
     color-scheme: light;
   }
 
