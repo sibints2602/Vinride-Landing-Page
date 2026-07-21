@@ -6,12 +6,24 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 
 export function Navbar() {
   return (
-    // A floating pill rather than a full-bleed bar: the page canvas runs
-    // behind and past it on both sides, which is what makes the blur read as
-    // glass instead of as a solid header. Stays a Server Component — the
-    // translucency is unconditional, so there is no scroll listener.
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6 sm:pt-4 lg:px-8">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 rounded-full border border-line bg-bg/70 pl-4 pr-2 shadow-lift backdrop-blur-xl sm:pl-5 sm:pr-3">
+    // Borderless: no pill, no rule, no shadow — the nav sits directly on the
+    // page canvas. Stays a Server Component; the treatment is unconditional,
+    // so there is no scroll listener.
+    <header className="fixed inset-x-0 top-0 z-50">
+      {/*
+       * The one concession to legibility. Without it, page content scrolls
+       * underneath and collides with the nav labels. This is a gradient that
+       * starts at the page background colour — so at rest it is invisible and
+       * the nav reads as borderless — and fades to nothing well before its
+       * lower edge, so there is never a visible boundary line. The mask
+       * feathers the blur out on the same curve, otherwise backdrop-blur
+       * terminates in a hard horizontal seam.
+       */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-bg from-35% via-bg/75 to-transparent backdrop-blur-sm [mask-image:linear-gradient(to_bottom,black_35%,transparent)]"
+      />
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <a
           href="#top"
           className="flex shrink-0 items-center gap-2.5 rounded-full transition-opacity duration-200 hover:opacity-80"
