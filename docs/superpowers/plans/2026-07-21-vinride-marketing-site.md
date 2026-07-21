@@ -162,8 +162,10 @@ Tasks 6–13 touch disjoint files and depend only on the foundation, so they can
   --fg: #f2f1ec;
   --fg-muted: #a3a9a5;
   --line: #2a3532;
-  --link: #14d3a9;
-  --ring: #14d3a9;
+  /* Reference the brand token rather than repeating the literal, so retuning
+     brand-green-strong can't leave the dark link/ring silently out of sync. */
+  --link: var(--color-brand-green-strong);
+  --ring: var(--color-brand-green-strong);
 }
 
 @theme inline {
