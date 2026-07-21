@@ -136,6 +136,7 @@ export function MobileMenu() {
           aria-modal="true"
           aria-label="Menu"
           aria-hidden={!open}
+          inert={!open}
           tabIndex={-1}
           className={cn(
             "absolute inset-y-0 right-0 flex h-full w-full max-w-xs flex-col gap-8 overflow-y-auto bg-surface p-6 shadow-sm transition-transform duration-300 ease-out",
