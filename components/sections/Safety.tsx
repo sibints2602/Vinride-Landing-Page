@@ -2,7 +2,7 @@ import { SAFETY } from "@/content/site";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 
 export function Safety() {
   return (
@@ -15,12 +15,11 @@ export function Safety() {
         eyebrow={SAFETY.eyebrow}
         heading={SAFETY.heading}
         subheading={SAFETY.subheading}
-        className="mx-auto"
       />
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {SAFETY.features.map((feature, index) => (
-          <Reveal key={feature.title} delay={index * 80}>
+          <Reveal key={feature.title} delay={index * REVEAL_STAGGER_MS}>
             <Card tone="surface" className="flex h-full flex-col gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-green/10 text-link">
                 <Icon name={feature.icon} className="h-6 w-6" />

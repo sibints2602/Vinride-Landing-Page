@@ -1,6 +1,6 @@
-import { STATS } from "@/content/site";
+import { STATS, STATS_SECTION } from "@/content/site";
 import { Counter } from "@/components/ui/Counter";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 
 /**
  * Short divider band between the hero and the content sections. Deliberately
@@ -11,9 +11,10 @@ export function StatsStrip() {
   return (
     <section id="stats" className="border-y border-line bg-surface-2 py-12 md:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <h2 className="sr-only">{STATS_SECTION.heading}</h2>
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {STATS.map((stat, index) => (
-            <Reveal key={stat.label} delay={index * 75} className="text-center">
+            <Reveal key={stat.label} delay={index * REVEAL_STAGGER_MS} className="text-center">
               <p className="font-display text-4xl tabular-nums text-fg md:text-5xl">
                 <Counter value={stat.value} suffix={stat.suffix} />
               </p>

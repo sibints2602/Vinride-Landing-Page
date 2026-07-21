@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { HERO, NAV_LINKS } from "@/content/site";
+import { HERO, MOBILE_MENU, NAV_LINKS, NAV_PRIMARY_LABEL } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
@@ -94,7 +94,7 @@ export function MobileMenu() {
         className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-fg md:hidden"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label="Open menu"
+        aria-label={MOBILE_MENU.openMenuLabel}
         onClick={() => setOpen(true)}
       >
         <Icon name="menu" />
@@ -134,7 +134,7 @@ export function MobileMenu() {
           id={panelId}
           role="dialog"
           aria-modal="true"
-          aria-label="Menu"
+          aria-label={MOBILE_MENU.dialogLabel}
           aria-hidden={!open}
           inert={!open}
           tabIndex={-1}
@@ -147,14 +147,14 @@ export function MobileMenu() {
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-fg-muted hover:text-fg"
-              aria-label="Close menu"
+              aria-label={MOBILE_MENU.closeMenuLabel}
               onClick={close}
             >
               <Icon name="close" />
             </button>
           </div>
 
-          <nav aria-label="Primary" className="flex flex-col gap-6">
+          <nav aria-label={NAV_PRIMARY_LABEL} className="flex flex-col gap-6">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}

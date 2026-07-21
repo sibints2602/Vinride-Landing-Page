@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BRAND, HERO, NAV_LINKS } from "@/content/site";
+import { BRAND, HERO, NAV_LINKS, NAV_PRIMARY_LABEL } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MobileMenu } from "@/components/layout/MobileMenu";
@@ -11,14 +11,15 @@ export function Navbar() {
         <a href="#top" className="flex shrink-0 items-center">
           <Image
             src={BRAND.logoSrc}
-            alt="Vinride"
+            alt={BRAND.name}
             width={32}
             height={32}
-            priority
+            loading="eager"
+            fetchPriority="high"
           />
         </a>
 
-        <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
+        <nav aria-label={NAV_PRIMARY_LABEL} className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}

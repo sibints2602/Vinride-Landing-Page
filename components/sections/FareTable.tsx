@@ -1,4 +1,5 @@
 import { BRAND, DISCLAIMER, FARES_SECTION, FARE_RATES, VEHICLE_TYPES } from "@/content/site";
+import { formatCurrency, formatCurrencyFixed1 } from "@/lib/currency";
 import { Icon } from "@/components/ui/Icon";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
@@ -16,10 +17,6 @@ const FARE_ROWS = FARE_RATES.flatMap((rate) => {
   return label ? [{ ...rate, label }] : [];
 });
 
-function formatAmount(value: number): string {
-  return `${BRAND.currencySymbol}${value}`;
-}
-
 const NUMERIC_HEADER_CLASS =
   "border-b border-line px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-fg-muted sm:text-right";
 const NUMERIC_CELL_CLASS = "px-4 py-3 text-left tabular-nums text-fg sm:text-right";
@@ -32,7 +29,6 @@ export function FareTable() {
         eyebrow={FARES_SECTION.eyebrow}
         heading={FARES_SECTION.heading}
         subheading={FARES_SECTION.subheading}
-        className="mx-auto"
       />
 
       <Reveal className="mt-12">
@@ -82,10 +78,10 @@ export function FareTable() {
                   <th scope="row" className="px-4 py-3 text-left font-medium text-fg">
                     {row.label}
                   </th>
-                  <td className={NUMERIC_CELL_CLASS}>{formatAmount(row.baseFare)}</td>
-                  <td className={NUMERIC_CELL_CLASS}>{formatAmount(row.perKm)}</td>
-                  <td className={NUMERIC_CELL_CLASS}>{formatAmount(row.perMinute)}</td>
-                  <td className={NUMERIC_CELL_CLASS}>{formatAmount(row.minimumFare)}</td>
+                  <td className={NUMERIC_CELL_CLASS}>{formatCurrency(row.baseFare, BRAND.currencySymbol)}</td>
+                  <td className={NUMERIC_CELL_CLASS}>{formatCurrency(row.perKm, BRAND.currencySymbol)}</td>
+                  <td className={NUMERIC_CELL_CLASS}>{formatCurrencyFixed1(row.perMinute, BRAND.currencySymbol)}</td>
+                  <td className={NUMERIC_CELL_CLASS}>{formatCurrency(row.minimumFare, BRAND.currencySymbol)}</td>
                 </tr>
               ))}
             </tbody>
@@ -94,7 +90,7 @@ export function FareTable() {
       </Reveal>
 
       <p className="mt-4 flex items-center gap-2 text-sm text-fg-muted">
-        <Icon name="check" className="h-4 w-4 shrink-0 text-brand-green" />
+        <Icon name="check" className="h-4 w-4 shrink-0 text-link" />
         {FARES_SECTION.noSurgeNote}
       </p>
       <p className="mt-2 text-xs text-fg-muted">{DISCLAIMER}</p>

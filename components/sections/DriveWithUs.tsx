@@ -3,23 +3,22 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 
 /**
  * The one section that stays dark in both themes: a solid brand-forest fill
- * with data-theme="dark" pinned locally — the same mechanism Card's
- * tone="forest" uses (see components/ui/Card.tsx) — so every theme-aware
- * token used below (text-fg, text-fg-muted, text-link, bg-surface,
- * border-line) resolves to its dark-theme value regardless of the page's
- * active theme: the dark-theme fg color for body text, the dark-theme link
- * color for accents. Never use these tokens here expecting the light-theme
- * values; they'd be wrong on this fill.
+ * with data-theme="dark" pinned locally, so every theme-aware token used
+ * below (text-fg, text-fg-muted, text-link, bg-surface, border-line)
+ * resolves to its dark-theme value regardless of the page's active theme:
+ * the dark-theme fg color for body text, the dark-theme link color for
+ * accents. Never use these tokens here expecting the light-theme values;
+ * they'd be wrong on this fill.
  *
  * The brand-forest fill sits close in luminance to the dark-theme page
  * background — a plain edge would nearly vanish there. The brand-green top/
  * bottom border keeps the section's boundary visible in both themes
  * (measured contrast: 4.79:1 against forest, 7.37:1 against the dark page
- * background — see task-12-report.md).
+ * background).
  */
 export function DriveWithUs() {
   return (
@@ -55,10 +54,10 @@ export function DriveWithUs() {
             </div>
           </Reveal>
 
-          <Reveal delay={120}>
+          <Reveal delay={REVEAL_STAGGER_MS}>
             <Card
               tone="surface"
-              className="ring-1 ring-brand-green/30 shadow-xl shadow-black/30"
+              className="ring-1 ring-brand-green/30 shadow-xl shadow-ink/30"
             >
               <p className="font-display text-4xl text-fg sm:text-5xl">
                 {DRIVE.earningsValue}

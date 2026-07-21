@@ -1,3 +1,4 @@
+import { SKIP_LINK_LABEL } from "@/content/site";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
@@ -14,10 +15,10 @@ export default function HomePage() {
   return (
     <>
       <a
-        href="#ride"
+        href="#top"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-brand-yellow focus:px-4 focus:py-2 focus:text-ink"
       >
-        Skip to content
+        {SKIP_LINK_LABEL}
       </a>
       <Navbar />
       <main className="flex-1">

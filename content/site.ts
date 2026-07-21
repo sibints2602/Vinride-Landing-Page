@@ -72,6 +72,24 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Safety", href: "#safety" },
 ];
 
+/** Shared between Navbar's and MobileMenu's <nav> landmarks — both wrap the
+ *  same NAV_LINKS, so both get the same accessible name. */
+export const NAV_PRIMARY_LABEL = "Primary" as const;
+
+/** The page's skip-to-content link, in app/page.tsx. */
+export const SKIP_LINK_LABEL = "Skip to content" as const;
+
+export const MOBILE_MENU = {
+  openMenuLabel: "Open menu",
+  dialogLabel: "Menu",
+  closeMenuLabel: "Close menu",
+} as const;
+
+export const THEME_TOGGLE = {
+  switchToLight: "Switch to light theme",
+  switchToDark: "Switch to dark theme",
+} as const;
+
 export const HERO = {
   eyebrow: "Now rolling in 12 cities",
   heading: "Your city, one tap away.",
@@ -97,8 +115,9 @@ export const ESTIMATOR = {
     pickupRequired: "Add a pickup point.",
     dropRequired: "Add a drop location.",
     sameLocation: "Pickup and drop can't be the same place.",
-    /** Defensive fallback for estimateFare's own thrown errors — should be unreachable once
-     *  pickup/drop/sameLocation validation above has already run, but never let a raw
+    /** Defensive fallback for estimateFare's own thrown errors — should be unreachable now
+     *  that both the submit handler AND the vehicle chips run the same pickup/drop/
+     *  sameLocation validation before ever calling estimateFare, but never let a raw
      *  Error message reach the DOM. */
     generic: "Couldn't estimate that route. Try a different pickup or drop.",
   },
@@ -131,6 +150,13 @@ export const FARE_RATES: FareRate[] = [
   { vehicleId: "suv", baseFare: 70, perKm: 22, perMinute: 1.6, minimumFare: 149 },
   { vehicleId: "outstation", baseFare: 500, perKm: 14, perMinute: 1, minimumFare: 1499 },
 ];
+
+/** Visually hidden heading naming the stats strip section for screen-reader
+ *  users, who otherwise land in an unnamed region between the hero and the
+ *  ride categories grid. */
+export const STATS_SECTION = {
+  heading: "Vinride by the numbers",
+} as const;
 
 export const STATS: Stat[] = [
   { value: 4, suffix: "M+", label: "Rides completed", srText: "4 million plus rides completed" },
@@ -219,6 +245,16 @@ export const SAFETY = {
 export const APP_DOWNLOAD = {
   heading: "Get moving with Vinride.",
   subheading: "The app is on its way. Be first in line when we launch.",
+  /** Display text for each store's lifecycle state, keyed by the `state`
+   *  literal used in `stores` below. Every state that appears there must
+   *  have a matching key here. */
+  stateLabels: {
+    "coming-soon": "Coming soon",
+  } as Record<string, string>,
+  /** Shown in place of a raw state slug if a store's `state` is ever missing
+   *  from stateLabels above — an unknown state must fail safe rather than
+   *  render an internal identifier as marketing copy. */
+  unknownStateFallback: "Status unavailable",
   /** Both stores are pre-launch. Rendered as disabled "Coming soon" badges — never as links. */
   stores: [
     { platform: "Google Play", state: "coming-soon" as const },
@@ -271,6 +307,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 ];
 
 export const FOOTER = {
+  /** Visually hidden. Gives the footer's own <h3> columns (Company, Ride,
+   *  Captains, Legal, Cities we serve) a proper <h2> ancestor of their own,
+   *  instead of nesting under the last visible <h2> before the footer. */
+  heading: "Footer",
   blurb: "Ride-hailing built on upfront fares and captains you can trust.",
   socials: [
     { label: "Instagram", href: "#", icon: "instagram" },

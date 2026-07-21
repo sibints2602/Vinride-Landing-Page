@@ -10,6 +10,8 @@ import {
   type VehicleTypeId,
 } from "@/content/site";
 import { estimateFare, type FareEstimate } from "@/lib/fare";
+import { formatCurrency } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 
@@ -43,16 +45,24 @@ export function FareEstimator() {
   const [vehicleId, setVehicleId] = useState<VehicleTypeId>("sedan");
   const [result, setResult] = useState<FareEstimate | null>(null);
   const [error, setError] = useState<EstimatorError | null>(null);
+  // True once the user has submitted the form at least once. Deliberately
+  // independent of `result`/`error`: clearing an input nulls `result` (see
+  // handlePickupChange/handleDropChange below), so gating the vehicle-chip
+  // recompute on `result` being truthy would silently stop working the
+  // moment a field is cleared — exactly the scenario (get an estimate, clear
+  // Pickup, click a chip) that recompute needs to keep validating.
+  const [hasAttempted, setHasAttempted] = useState(false);
 
   /**
-   * Runs the (already-validated) route through estimateFare. The try/catch
-   * here is defensive: our own validation above already rejects blank or
-   * identical pickup/drop before this is ever called, so estimateFare's own
-   * InvalidRouteError should be unreachable, and vehicleId always comes from
-   * VEHICLE_TYPES so its UnknownVehicleError should be unreachable too. Every
-   * thrown value — including anything unexpected — deliberately resolves to
-   * the same friendly fallback message, so no raw error message or NaN can
-   * ever reach the DOM.
+   * Runs the (already-validated) route through estimateFare. validateAndCompute
+   * below is the only caller, so blank/identical pickup/drop is always
+   * rejected with the specific field-level message before this ever runs. The
+   * try/catch here is defensive: estimateFare's own InvalidRouteError should
+   * be unreachable given that upstream validation, and vehicleId always comes
+   * from VEHICLE_TYPES so its UnknownVehicleError should be unreachable too.
+   * Every thrown value — including anything unexpected — deliberately
+   * resolves to the same friendly fallback message, so no raw error message
+   * or NaN can ever reach the DOM.
    */
   function computeEstimate(vehicle: VehicleTypeId, from: string, to: string) {
     try {
@@ -65,11 +75,17 @@ export function FareEstimator() {
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedPickup = pickup.trim();
-    const trimmedDrop = drop.trim();
+  /**
+   * Shared by both the submit button and the ride-type chips: validates
+   * pickup/drop first and only calls computeEstimate once the route is
+   * well-formed. Without this, a path that skipped straight to
+   * computeEstimate would fall through to estimateFare's own generic
+   * InvalidRouteError instead of surfacing the specific "Add a pickup
+   * point." / "Add a drop location." / same-location message.
+   */
+  function validateAndCompute(vehicle: VehicleTypeId, from: string, to: string) {
+    const trimmedPickup = from.trim();
+    const trimmedDrop = to.trim();
 
     if (!trimmedPickup) {
       setResult(null);
@@ -87,16 +103,42 @@ export function FareEstimator() {
       return;
     }
 
-    computeEstimate(vehicleId, pickup, drop);
+    computeEstimate(vehicle, from, to);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setHasAttempted(true);
+    validateAndCompute(vehicleId, pickup, drop);
   }
 
   function handleVehicleChange(id: VehicleTypeId) {
     setVehicleId(id);
-    // Keep an already-displayed result in sync with the new vehicle choice
+    // Keep the form in sync with the new vehicle choice once the user has
+    // tried to get an estimate at least once — recomputing (or re-validating)
     // instead of leaving a stale quote for the previously selected ride type.
-    if (result) {
-      computeEstimate(id, pickup, drop);
+    // Routed through the same validation handleSubmit uses, so e.g. clearing
+    // Pickup and then clicking a chip surfaces the specific "Add a pickup
+    // point." message rather than estimateFare's generic fallback, even
+    // though clearing Pickup already nulled out any prior `result`.
+    if (hasAttempted) {
+      validateAndCompute(id, pickup, drop);
     }
+  }
+
+  function handlePickupChange(value: string) {
+    setPickup(value);
+    // Clear any previously displayed result: it was computed from the old
+    // pickup value and no longer describes the route currently in the form.
+    setResult(null);
+  }
+
+  function handleDropChange(value: string) {
+    setDrop(value);
+    // Same reasoning as handlePickupChange: a stale fare band left on screen
+    // beneath inputs that didn't produce it is exactly the "no surprises"
+    // pitch this site is undermining if left in place.
+    setResult(null);
   }
 
   const pickupInvalid = error?.field === "pickup" || error?.field === "both";
@@ -129,7 +171,7 @@ export function FareEstimator() {
               type="text"
               list={localitiesDatalistId}
               value={pickup}
-              onChange={(event) => setPickup(event.target.value)}
+              onChange={(event) => handlePickupChange(event.target.value)}
               placeholder={ESTIMATOR.pickupPlaceholder}
               aria-invalid={pickupInvalid || undefined}
               aria-describedby={pickupInvalid ? errorId : undefined}
@@ -146,7 +188,7 @@ export function FareEstimator() {
               type="text"
               list={localitiesDatalistId}
               value={drop}
-              onChange={(event) => setDrop(event.target.value)}
+              onChange={(event) => handleDropChange(event.target.value)}
               placeholder={ESTIMATOR.dropPlaceholder}
               aria-invalid={dropInvalid || undefined}
               aria-describedby={dropInvalid ? errorId : undefined}
@@ -172,21 +214,31 @@ export function FareEstimator() {
         )}
       </form>
 
-      {result && (
-        <div aria-live="polite" className="mt-6 rounded-xl border border-line bg-surface-2 p-5">
-          <p className="text-sm text-fg-muted">{ESTIMATOR.resultPrefix}</p>
-          <p className="mt-1 font-display text-2xl text-fg">
-            {BRAND.currencySymbol}
-            {result.low} – {BRAND.currencySymbol}
-            {result.high}
-          </p>
-          <p className="mt-1 text-sm text-fg-muted">
-            {ESTIMATOR.distanceLabel(result.distanceKm)} &middot; {ESTIMATOR.etaLabel(result.etaMinutes)}
-          </p>
-          <p className="mt-4 text-xs text-fg-muted">{ESTIMATOR.demoNote}</p>
-          <p className="mt-1 text-xs text-fg-muted">{DISCLAIMER}</p>
-        </div>
-      )}
+      {/* Always mounted (not conditionally rendered) so the aria-live region
+          already exists in the DOM before its content ever changes — a
+          region created at the same moment its content appears is exactly
+          the case most screen readers fail to announce (see
+          RideCategories.tsx for the same pattern). Un-styled and empty until
+          a result exists, so nothing is visible when there's nothing to
+          show. */}
+      <div
+        aria-live="polite"
+        className={cn("rounded-xl", result && "mt-6 border border-line bg-surface-2 p-5")}
+      >
+        {result && (
+          <>
+            <p className="text-sm text-fg-muted">{ESTIMATOR.resultPrefix}</p>
+            <p className="mt-1 font-display text-2xl text-fg">
+              {formatCurrency(result.low, BRAND.currencySymbol)} – {formatCurrency(result.high, BRAND.currencySymbol)}
+            </p>
+            <p className="mt-1 text-sm text-fg-muted">
+              {ESTIMATOR.distanceLabel(result.distanceKm)} &middot; {ESTIMATOR.etaLabel(result.etaMinutes)}
+            </p>
+            <p className="mt-4 text-xs text-fg-muted">{ESTIMATOR.demoNote}</p>
+            <p className="mt-1 text-xs text-fg-muted">{DISCLAIMER}</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

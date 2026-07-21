@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary";
 type Size = "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
@@ -10,7 +10,6 @@ const VARIANTS: Record<Variant, string> = {
     "bg-brand-yellow text-ink hover:bg-brand-amber hover:text-ink shadow-sm",
   secondary:
     "bg-surface text-fg border border-line hover:border-brand-green",
-  ghost: "text-fg hover:text-link",
 };
 
 const SIZES: Record<Size, string> = {

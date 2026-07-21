@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { THEME_TOGGLE } from "@/content/site";
 import { Icon } from "@/components/ui/Icon";
 
 type Theme = "light" | "dark";
@@ -42,7 +43,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label={isDark ? THEME_TOGGLE.switchToLight : THEME_TOGGLE.switchToDark}
       suppressHydrationWarning
       className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-fg-muted transition-colors duration-200 hover:text-fg"
     >

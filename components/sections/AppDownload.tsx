@@ -11,26 +11,16 @@ const STORE_ICON: Record<string, string> = {
 };
 
 /**
- * Display text for each store's lifecycle state, derived from the content
- * model's `state` field rather than invented copy. Today only "coming-soon"
- * exists in content/site.ts; the fallback keeps this from silently rendering
- * nothing if a future state is added there.
- */
-const STATE_LABEL: Record<string, string> = {
-  "coming-soon": "Coming soon",
-};
-
-/**
  * Vinride has no live App Store or Play Store listing yet, so this can never
  * be an <a> or <button> — a dead `href="#"` styled as a store button would
  * mislead riders into thinking the app already exists. It's a plain, inert
  * div: no tabindex (not focusable), aria-disabled to tell assistive tech it's
- * inactive, and a visible "Coming soon" label so sighted users get the same
- * signal.
+ * inactive, and a visible state label (content-sourced, e.g. "Coming soon")
+ * so sighted users get the same signal.
  */
 function StoreBadge({ platform, state }: { platform: string; state: string }) {
   const iconName = STORE_ICON[platform] ?? "pin";
-  const stateLabel = STATE_LABEL[state] ?? state;
+  const stateLabel = APP_DOWNLOAD.stateLabels[state] ?? APP_DOWNLOAD.unknownStateFallback;
 
   return (
     <div
@@ -100,7 +90,7 @@ function PhoneMockup() {
  */
 export function AppDownload() {
   return (
-    <section id="download" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+    <section id="download" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
       <Reveal>
         <div className="grid items-center gap-12 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-yellow to-brand-amber p-8 sm:p-12 lg:grid-cols-2 lg:p-16">
           <div className="flex flex-col items-start gap-6">

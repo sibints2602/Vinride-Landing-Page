@@ -77,12 +77,6 @@ const ICONS: Record<string, ReactNode> = {
       <line x1="18" y1="6" x2="6" y2="18" />
     </>
   ),
-  "arrow-right": (
-    <>
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <polyline points="13 5 20 12 13 19" />
-    </>
-  ),
   check: <polyline points="4 12 9.5 17.5 20 6" />,
   pin: (
     <>

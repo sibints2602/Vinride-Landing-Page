@@ -2,13 +2,14 @@ import { WHY_VINRIDE } from "@/content/site";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 
 /**
  * One tone per card, in the order the copy is authored: yellow, then a
  * neutral surface, then green. Card.tsx keeps every tone's body text on
  * text-fg (never a tinted or muted color), so the wash never has to fight
- * contrast — see task-10-report.md for the measured ratios.
+ * contrast — measured at ~17.1:1 (yellow wash), ~18.9:1 (surface), and
+ * ~16.5:1 (green wash) against text-fg, all far past the 4.5:1 AA floor.
  */
 const CARD_TONES = ["yellow", "surface", "green"] as const;
 
@@ -23,12 +24,11 @@ export function WhyVinride() {
         eyebrow={WHY_VINRIDE.eyebrow}
         heading={WHY_VINRIDE.heading}
         subheading={WHY_VINRIDE.subheading}
-        className="mx-auto"
       />
 
       <div className="mt-12 grid gap-6 md:grid-cols-3">
         {WHY_VINRIDE.features.map((feature, index) => (
-          <Reveal key={feature.title} delay={index * 80}>
+          <Reveal key={feature.title} delay={index * REVEAL_STAGGER_MS}>
             <Card tone={CARD_TONES[index]} className="flex h-full flex-col gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-fg">
                 <Icon name={feature.icon} className="h-6 w-6" />

@@ -15,6 +15,14 @@ export interface RevealProps {
   className?: string;
 }
 
+/**
+ * Single source of truth for the stagger step between sibling Reveal
+ * delays, e.g. `delay={index * REVEAL_STAGGER_MS}` for a mapped list. Keeps
+ * every staggered section (StatsStrip, WhyVinride, HowItWorks, Safety,
+ * DriveWithUs) on the same rhythm instead of each picking its own number.
+ */
+export const REVEAL_STAGGER_MS = 80;
+
 // useLayoutEffect warns when it runs during server rendering (it has no
 // effect there, since there's no browser paint to run "before"). Static
 // generation renders this "use client" component in Node, so window is

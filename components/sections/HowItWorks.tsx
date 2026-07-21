@@ -1,6 +1,6 @@
 import { HOW_IT_WORKS } from "@/content/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 
 export function HowItWorks() {
   const { steps } = HOW_IT_WORKS;
@@ -34,7 +34,7 @@ export function HowItWorks() {
                 />
               ) : null}
 
-              <Reveal delay={index * 80}>
+              <Reveal delay={index * REVEAL_STAGGER_MS}>
                 <div className="flex items-baseline gap-3">
                   {/* Large numeral, low opacity, purely decorative — order is
                       conveyed to screen readers by the <ol>/<li> structure

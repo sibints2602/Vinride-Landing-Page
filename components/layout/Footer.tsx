@@ -6,6 +6,11 @@ export function Footer() {
   return (
     <footer className="border-t border-line bg-surface-2">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        {/* Visually hidden: gives the <h3> column headings and the "Cities
+            we serve" <h3> below a proper <h2> ancestor of their own, instead
+            of nesting under AppDownload's <h2> (the last visible heading
+            before the footer in document order). */}
+        <h2 className="sr-only">{FOOTER.heading}</h2>
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="flex flex-col gap-4">
             <Image src={BRAND.logoSrc} alt={BRAND.name} width={32} height={32} />
@@ -48,7 +53,7 @@ export function Footer() {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-fg-muted">
             {FOOTER.citiesHeading}
           </h3>
-          <ul className="mt-4 flex flex-wrap text-sm text-fg-muted">
+          <ul className="mt-4 flex flex-wrap gap-y-2 text-sm text-fg-muted">
             {CITIES.map((city, index) => (
               <li key={city} className="flex items-center">
                 {city}
