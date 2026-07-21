@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
+/* Dark mode is attribute-driven, not media-query driven, so the ThemeToggle can
+   override the OS preference. Must match the attribute set by ThemeScript. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---- Brand constants: identical in both themes ---- */
+@theme {
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-yellow: #f5b301;
+  --color-brand-amber: #ef7d00;
+  --color-brand-green: #0fb894;
+  --color-brand-green-strong: #14d3a9;
+  --color-brand-forest: #123d2f;
+  /* Near-black. The ONLY permitted text color on a yellow or amber fill. */
+  --color-ink: #14100b;
+}
+
+/* ---- Theme-dependent surfaces ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface-2: #f2f1ec;
+  --fg: #14100b;
+  --fg-muted: #6b6660;
+  --line: #e5e2da;
+  /* Darkened brand green: #0FB894 fails AA on white, this passes. */
+  --link: #0a8e72;
+  --ring: #0a8e72;
+}
+
+[data-theme="dark"] {
+  --bg: #0e1412;
+  --surface: #161e1b;
+  --surface-2: #1e2825;
+  --fg: #f2f1ec;
+  --fg-muted: #a3a9a5;
+  --line: #2a3532;
+  --link: #14d3a9;
+  --ring: #14d3a9;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-link: var(--link);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Sticky nav is 4rem tall; keeps anchor targets from hiding beneath it. */
+    scroll-padding-top: 5rem;
+    color-scheme: light;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
