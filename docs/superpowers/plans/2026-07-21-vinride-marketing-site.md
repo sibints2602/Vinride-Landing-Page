@@ -149,9 +149,10 @@ Tasks 6–13 touch disjoint files and depend only on the foundation, so they can
   --fg: #14100b;
   --fg-muted: #6b6660;
   --line: #e5e2da;
-  /* Darkened brand green: #0FB894 fails AA on white, this passes. */
-  --link: #0a8e72;
-  --ring: #0a8e72;
+  /* Darkened brand green. #0FB894 is only 2.53:1 on white; this is 5.22:1 on
+     #ffffff and 4.99:1 on #fafaf8, clearing AA on both surfaces. */
+  --link: #087b63;
+  --ring: #087b63;
 }
 
 [data-theme="dark"] {
