@@ -18,12 +18,27 @@ const SIZES: Record<Size, string> = {
   lg: "h-12 px-6 text-base",
 };
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonOwnProps {
   variant?: Variant;
   size?: Size;
-  href?: string;
+  className?: string;
+  children?: React.ReactNode;
 }
+
+type AnchorButtonProps = ButtonOwnProps &
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof ButtonOwnProps> & {
+    href: string;
+  };
+
+type NativeButtonProps = ButtonOwnProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonOwnProps> & {
+    href?: undefined;
+  };
+
+// Discriminated on `href`: pass it and you get honest anchor props
+// (target, rel, aria-label, onClick, ...); omit it and you get honest
+// button props (type, disabled, onClick, ...) — no `any` involved.
+export type ButtonProps = AnchorButtonProps | NativeButtonProps;
 
 export function Button({
   variant = "primary",
@@ -31,7 +46,7 @@ export function Button({
   href,
   className,
   children,
-  ...props
+  ...rest
 }: ButtonProps) {
   const classes = cn(
     "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:pointer-events-none",
@@ -41,15 +56,23 @@ export function Button({
   );
 
   if (href) {
+    const anchorProps = rest as Omit<
+      React.AnchorHTMLAttributes<HTMLAnchorElement>,
+      keyof ButtonOwnProps | "href"
+    >;
     return (
-      <a href={href} className={classes}>
+      <a href={href} className={classes} {...anchorProps}>
         {children}
       </a>
     );
   }
 
+  const { type = "button", ...buttonProps } = rest as Omit<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    keyof ButtonOwnProps | "href"
+  >;
   return (
-    <button className={classes} {...props}>
+    <button type={type} className={classes} {...buttonProps}>
       {children}
     </button>
   );

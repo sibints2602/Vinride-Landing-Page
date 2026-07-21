@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export interface CounterProps {
   value: number;
@@ -14,13 +14,21 @@ function formatValue(current: number, fractional: boolean): string {
   return fractional ? current.toFixed(1) : String(Math.round(current));
 }
 
+// useLayoutEffect warns when it runs during server rendering (it has no
+// effect there, since there's no browser paint to run "before"). Static
+// generation renders this "use client" component in Node, so window is
+// undefined at module-eval time and we fall back to useEffect there; in the
+// browser, window is defined and we get the real, pre-paint layout effect.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function Counter({ value, suffix = "" }: CounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const rafRef = useRef<number | null>(null);
   const fractional = !Number.isInteger(value);
   const [display, setDisplay] = useState(() => formatValue(0, fractional));
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const node = ref.current;
 
     const prefersReducedMotion =
@@ -28,14 +36,14 @@ export function Counter({ value, suffix = "" }: CounterProps) {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Deferred through a timeout callback (rather than called inline here) so
-    // the effect body only ever sets up a subscription, never calls setState
-    // synchronously itself.
+    // A "0" reading is worse than a missing count-up animation: jump
+    // straight to the final value when we can't observe, or when the user
+    // doesn't want motion. This runs in a layout effect (synchronous,
+    // pre-paint) rather than a passive effect, so these users never see a
+    // painted "0" frame before it corrects.
     if (!node || typeof IntersectionObserver === "undefined" || prefersReducedMotion) {
-      const timeoutId = window.setTimeout(() => {
-        setDisplay(formatValue(value, fractional));
-      }, 0);
-      return () => window.clearTimeout(timeoutId);
+      setDisplay(formatValue(value, fractional));
+      return;
     }
 
     const observer = new IntersectionObserver(

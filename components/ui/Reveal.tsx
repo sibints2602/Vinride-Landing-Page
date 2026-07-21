@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 export interface RevealProps {
@@ -9,11 +15,19 @@ export interface RevealProps {
   className?: string;
 }
 
+// useLayoutEffect warns when it runs during server rendering (it has no
+// effect there, since there's no browser paint to run "before"). Static
+// generation renders this "use client" component in Node, so window is
+// undefined at module-eval time and we fall back to useEffect there; in the
+// browser, window is defined and we get the real, pre-paint layout effect.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function Reveal({ children, delay = 0, className }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const node = ref.current;
 
     const prefersReducedMotion =
@@ -23,11 +37,12 @@ export function Reveal({ children, delay = 0, className }: RevealProps) {
 
     // A blank page is worse than a missing animation: skip straight to
     // visible when we can't observe, or when the user doesn't want motion.
-    // The setState call is deferred into a callback (rather than invoked
-    // inline here) so the effect body itself only sets up a subscription.
+    // This runs in a layout effect (synchronous, pre-paint) rather than a
+    // passive effect, so these users never see a painted frame of hidden
+    // content before it corrects.
     if (!node || typeof IntersectionObserver === "undefined" || prefersReducedMotion) {
-      const timeoutId = window.setTimeout(() => setVisible(true), 0);
-      return () => window.clearTimeout(timeoutId);
+      setVisible(true);
+      return;
     }
 
     const observer = new IntersectionObserver(
