@@ -17,7 +17,13 @@ export function StatsStrip() {
               <p className="font-display text-4xl tabular-nums text-fg md:text-5xl">
                 <Counter value={stat.value} suffix={stat.suffix} />
               </p>
-              <p className="mt-2 text-sm text-fg-muted">{stat.label}</p>
+              {/* Visible label is aria-hidden: stat.srText below is the
+                  complete sentence a screen reader should announce instead,
+                  so this text isn't also read out and duplicated. */}
+              <p aria-hidden="true" className="mt-2 text-sm text-fg-muted">
+                {stat.label}
+              </p>
+              <span className="sr-only">{stat.srText}</span>
             </Reveal>
           ))}
         </div>

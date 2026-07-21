@@ -77,7 +77,10 @@ export function Counter({ value, suffix = "" }: CounterProps) {
   }, [value, fractional]);
 
   return (
-    <span ref={ref}>
+    // Decorative: a rapidly changing count-up is noise to assistive tech
+    // even before considering the suffix. Callers must provide the real
+    // announcement as static text elsewhere (see StatsStrip).
+    <span ref={ref} aria-hidden="true">
       {display}
       {suffix}
     </span>

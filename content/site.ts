@@ -23,6 +23,13 @@ export interface Stat {
   /** Rendered after the animated number, e.g. "M+", "+", "★". */
   suffix: string;
   label: string;
+  /**
+   * Full, static sentence announced to assistive tech in place of the
+   * animated number + suffix + label, which are visual-only (aria-hidden).
+   * Must stand alone as a complete, accurate sentence — e.g. "4 million plus
+   * rides completed" rather than a fragment paired with visible text.
+   */
+  srText: string;
 }
 
 export interface Feature {
@@ -126,10 +133,10 @@ export const FARE_RATES: FareRate[] = [
 ];
 
 export const STATS: Stat[] = [
-  { value: 4, suffix: "M+", label: "Rides completed" },
-  { value: 12, suffix: "", label: "Cities served" },
-  { value: 60, suffix: "K+", label: "Verified captains" },
-  { value: 4.8, suffix: "★", label: "Average rating" },
+  { value: 4, suffix: "M+", label: "Rides completed", srText: "4 million plus rides completed" },
+  { value: 12, suffix: "", label: "Cities served", srText: "12 cities served" },
+  { value: 60, suffix: "K+", label: "Verified captains", srText: "60 thousand plus verified captains" },
+  { value: 4.8, suffix: "★", label: "Average rating", srText: "4.8 out of 5 average rating" },
 ];
 
 export const RIDES_SECTION = {
