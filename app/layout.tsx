@@ -1,24 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import "./globals.css";
 
-// Variable font (wght 100-900), so `weight` is omitted deliberately.
-const geist = Geist({
+// Poppins is NOT a variable font, so `weight` is required and each cut listed
+// here is downloaded separately. Keep this list to the weights actually used
+// (400 body, 500 font-medium, 600 font-semibold, 700 display) — every extra
+// entry is another font file on the critical path.
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-geist",
-});
-
-// Instrument Serif is NOT variable and ships weight 400 only, so `weight` is
-// required here and "400" is the only value that typechecks. Never pair it
-// with a font-bold/semibold utility: there is no bold cut, so the browser
-// would synthesise one and smear the serif's contrast.
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-instrument-serif",
+  variable: "--font-poppins",
 });
 
 export const metadata: Metadata = {
@@ -52,7 +45,7 @@ export default function RootLayout({
       data-theme="light"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${geist.variable} ${instrumentSerif.variable} h-full`}
+      className={`${poppins.variable} h-full`}
     >
       <head>
         <ThemeScript />

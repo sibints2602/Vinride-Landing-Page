@@ -33,6 +33,7 @@ const ICONS: Record<string, ReactNode> = {
       <path d="m6 13.5 6 6 6-6" />
     </>
   ),
+  "chevron-down": <path d="m6 9.5 6 6 6-6" />,
   headset: (
     <>
       <path d="M4 12a8 8 0 0 1 16 0" />

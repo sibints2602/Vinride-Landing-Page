@@ -6,8 +6,8 @@
 
 /* ---- Brand constants: identical in both themes ---- */
 @theme {
-  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 
   --color-brand-yellow: #f5b301;
   --color-brand-amber: #ef7d00;
@@ -92,10 +92,9 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    /* -0.02em was tuned for a geometric sans. A high-contrast serif has much
-       narrower sidebearings already; tightening it that far collides the
-       thin strokes at display sizes. */
-    letter-spacing: -0.01em;
+    /* Poppins is geometric and runs wide by default; display sizes need the
+       tracking pulled in to stop headlines looking loose. */
+    letter-spacing: -0.02em;
   }
 
   :focus-visible {

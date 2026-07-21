@@ -12,7 +12,6 @@ import {
 import { estimateFare, type FareEstimate } from "@/lib/fare";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import { Chip } from "@/components/ui/Chip";
 import { Icon } from "@/components/ui/Icon";
 
 type ErrorField = "pickup" | "drop" | "both";
@@ -37,6 +36,7 @@ export function FareEstimator() {
   const uid = useId();
   const pickupInputId = `${uid}-pickup`;
   const dropInputId = `${uid}-drop`;
+  const vehicleSelectId = `${uid}-vehicle`;
   const errorId = `${uid}-error`;
   const localitiesDatalistId = `${uid}-localities`;
 
@@ -47,10 +47,10 @@ export function FareEstimator() {
   const [error, setError] = useState<EstimatorError | null>(null);
   // True once the user has submitted the form at least once. Deliberately
   // independent of `result`/`error`: clearing an input nulls `result` (see
-  // handlePickupChange/handleDropChange below), so gating the vehicle-chip
+  // handlePickupChange/handleDropChange below), so gating the ride-type
   // recompute on `result` being truthy would silently stop working the
   // moment a field is cleared — exactly the scenario (get an estimate, clear
-  // Pickup, click a chip) that recompute needs to keep validating.
+  // Pickup, change the ride type) that recompute needs to keep validating.
   const [hasAttempted, setHasAttempted] = useState(false);
 
   /**
@@ -76,7 +76,7 @@ export function FareEstimator() {
   }
 
   /**
-   * Shared by both the submit button and the ride-type chips: validates
+   * Shared by both the submit button and the ride-type select: validates
    * pickup/drop first and only calls computeEstimate once the route is
    * well-formed. Without this, a path that skipped straight to
    * computeEstimate would fall through to estimateFare's own generic
@@ -118,7 +118,7 @@ export function FareEstimator() {
     // tried to get an estimate at least once — recomputing (or re-validating)
     // instead of leaving a stale quote for the previously selected ride type.
     // Routed through the same validation handleSubmit uses, so e.g. clearing
-    // Pickup and then clicking a chip surfaces the specific "Add a pickup
+    // Pickup and then changing the ride type surfaces the specific "Add a pickup
     // point." message rather than estimateFare's generic fallback, even
     // though clearing Pickup already nulled out any prior `result`.
     if (hasAttempted) {
@@ -150,33 +150,20 @@ export function FareEstimator() {
   const fieldInput =
     "mt-0.5 w-full rounded-sm border-0 bg-transparent p-0 text-sm text-fg placeholder:text-fg-muted";
 
+  // Horizontal rule between stacked segments, vertical once they sit in a row.
+  const divider = "mx-4 h-px bg-line lg:mx-0 lg:h-9 lg:w-px";
+
   return (
     <div>
       <h2 className="sr-only">{ESTIMATOR.heading}</h2>
 
       <form onSubmit={handleSubmit} noValidate>
-        <div
-          role="group"
-          aria-label={ESTIMATOR.rideTypeGroupLabel}
-          className="flex flex-wrap justify-center gap-2"
-        >
-          {VEHICLE_TYPES.map((vehicle) => (
-            <Chip
-              key={vehicle.id}
-              selected={vehicleId === vehicle.id}
-              onClick={() => handleVehicleChange(vehicle.id)}
-            >
-              {vehicle.label}
-            </Chip>
-          ))}
-        </div>
-
         {/* Rounded-3xl until the segments can sit on one row: a fully rounded
             pill around a stacked column would bow its own edges away from the
             fields inside it. */}
-        <div className="mt-6 rounded-3xl border border-line bg-surface p-2 shadow-lift-lg sm:rounded-full">
-          <div className="flex flex-col sm:flex-row sm:items-center">
-            <div className="flex-1 px-4 py-2.5 sm:px-6">
+        <div className="rounded-3xl border border-line bg-surface p-1.5 shadow-lift-lg lg:rounded-full">
+          <div className="flex flex-col lg:flex-row lg:items-center">
+            <div className="min-w-0 flex-1 px-4 py-2 lg:px-6">
               <label
                 htmlFor={pickupInputId}
                 className="block text-xs font-medium text-fg-muted"
@@ -196,12 +183,9 @@ export function FareEstimator() {
               />
             </div>
 
-            <div
-              aria-hidden="true"
-              className="mx-4 h-px bg-line sm:mx-0 sm:h-10 sm:w-px"
-            />
+            <div aria-hidden="true" className={divider} />
 
-            <div className="flex-1 px-4 py-2.5 sm:px-6">
+            <div className="min-w-0 flex-1 px-4 py-2 lg:px-6">
               <label
                 htmlFor={dropInputId}
                 className="block text-xs font-medium text-fg-muted"
@@ -221,16 +205,58 @@ export function FareEstimator() {
               />
             </div>
 
-            {/* Icon-only once the bar is a single row, where the two labelled
+            <div aria-hidden="true" className={divider} />
+
+            {/*
+             * A native <select> rather than the chip row this used to be.
+             * Five chips cannot sit inside the bar without wrapping it to two
+             * rows, and the whole point of moving them in here was to make it
+             * compact. A select also gets keyboard support, type-ahead and the
+             * platform picker on touch for free. onChange still routes through
+             * handleVehicleChange, so the recompute-on-change behaviour and its
+             * validation are unchanged.
+             */}
+            <div className="min-w-0 px-4 py-2 lg:px-6">
+              <label
+                htmlFor={vehicleSelectId}
+                className="block text-xs font-medium text-fg-muted"
+              >
+                {ESTIMATOR.rideTypeGroupLabel}
+              </label>
+              <div className="relative">
+                <select
+                  id={vehicleSelectId}
+                  value={vehicleId}
+                  onChange={(event) =>
+                    handleVehicleChange(event.target.value as VehicleTypeId)
+                  }
+                  className={cn(fieldInput, "appearance-none pr-6")}
+                >
+                  {VEHICLE_TYPES.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.label}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-fg-muted"
+                >
+                  <Icon name="chevron-down" className="h-4 w-4" />
+                </span>
+              </div>
+            </div>
+
+            {/* Icon-only once the bar is a single row, where the labelled
                 fields beside it make the intent obvious; below that the label
                 is visible, since a lone circle at the foot of a stacked form
                 reads as decoration. */}
             <button
               type="submit"
-              className="mt-2 flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber sm:mt-0 sm:w-12"
+              className="mt-1.5 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber lg:mt-0 lg:w-11"
             >
-              <Icon name="search" />
-              <span className="sm:sr-only">{ESTIMATOR.submitLabel}</span>
+              <Icon name="search" className="h-[18px] w-[18px]" />
+              <span className="lg:sr-only">{ESTIMATOR.submitLabel}</span>
             </button>
           </div>
         </div>
