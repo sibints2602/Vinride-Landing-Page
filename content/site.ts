@@ -87,6 +87,10 @@ export const ESTIMATOR = {
     pickupRequired: "Add a pickup point.",
     dropRequired: "Add a drop location.",
     sameLocation: "Pickup and drop can't be the same place.",
+    /** Defensive fallback for estimateFare's own thrown errors — should be unreachable once
+     *  pickup/drop/sameLocation validation above has already run, but never let a raw
+     *  Error message reach the DOM. */
+    generic: "Couldn't estimate that route. Try a different pickup or drop.",
   },
 } as const;
 
