@@ -278,5 +278,12 @@ export const FOOTER = {
     { label: "LinkedIn", href: "#", icon: "linkedin" },
   ],
   citiesHeading: "Cities we serve",
+  /**
+   * Evaluated at module scope, so on a statically prerendered page the year is
+   * baked in at BUILD time, not request time. A deploy that sits untouched
+   * across a new year will show a stale year until the next rebuild. Accepted
+   * deliberately: making the footer a Client Component just to compute a year
+   * costs more than it saves. Rebuild on deploy, or at minimum each January.
+   */
   copyright: `© ${new Date().getFullYear()} Vinride. All rights reserved.`,
 } as const;
