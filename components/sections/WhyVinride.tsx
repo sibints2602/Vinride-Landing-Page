@@ -35,9 +35,7 @@ export function WhyVinride() {
               </div>
               <div>
                 <h3 className="font-display text-lg text-fg">{feature.title}</h3>
-                {/* Body stays on text-fg (not text-fg-muted) so the yellow-tinted
-                    card keeps a comfortably AA-plus ratio — see task-10-report.md. */}
-                <p className="mt-2 text-fg">{feature.body}</p>
+                <p className="mt-2 text-fg-muted">{feature.body}</p>
               </div>
             </Card>
           </Reveal>
