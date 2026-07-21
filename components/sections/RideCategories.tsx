@@ -128,12 +128,20 @@ export function RideCategories() {
         </div>
       </div>
 
+      {/* Visually hidden but announced to assistive tech whenever the filter
+          changes the visible card count — present on every render (not
+          conditionally mounted) so server and client markup agree on first
+          paint. */}
+      <p aria-live="polite" className="sr-only">
+        {RIDES_SECTION.filterResultsLabel(visibleVehicles.length, VEHICLE_TYPES.length)}
+      </p>
+
       <Reveal className="mt-8">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleVehicles.map((vehicle) => (
             <Card
               key={vehicle.id}
-              className="flex h-full flex-col gap-4 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
+              className="flex h-full flex-col gap-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg"
             >
               <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-surface-2 text-fg">
                 <VehicleGlyph id={vehicle.id} />

@@ -148,6 +148,9 @@ export const RIDES_SECTION = {
   seatsLabel: (seats: number) => (seats === 1 ? "1 seat" : `${seats} seats`),
   etaLabel: (minutes: number) => `~${minutes} min away`,
   fromLabel: "from",
+  /** Announced via aria-live when the ride-type filter changes the visible card count. */
+  filterResultsLabel: (shown: number, total: number) =>
+    `Showing ${shown} of ${total} ride type${total === 1 ? "" : "s"}`,
 } as const;
 
 export const WHY_VINRIDE = {
