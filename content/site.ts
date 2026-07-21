@@ -189,6 +189,12 @@ export const DRIVE = {
     "Join as a captain and drive when it suits you — mornings, evenings, weekends, your call.",
   earningsValue: "₹32,000",
   earningsLabel: "Average monthly earnings for full-time captains",
+  /**
+   * Must render next to earningsValue. The figure is a placeholder, and
+   * presenting invented income without a qualifier would read as a guarantee.
+   */
+  earningsQualifier:
+    "Illustrative figure. Actual earnings vary by city, hours driven and demand.",
   benefits: [
     "Weekly payouts, straight to your bank",
     "Lower commission than the big platforms",
