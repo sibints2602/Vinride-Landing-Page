@@ -3,7 +3,16 @@ import { HERO } from "@/content/site";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 import { FareEstimator } from "@/components/sections/FareEstimator";
-import heroCar from "@/public/Hero-Car.png";
+/**
+ * Trimmed to the car's alpha bounding box (606x191) from the supplied
+ * Hero-Car.png (666x375), which carries 96px of transparent margin above the
+ * roof and 88px below the tyres — 49% of its height. Untrimmed, half the
+ * vertical space the image occupies in the layout is empty, which is what
+ * made the car look small however large the element got. The crop is lossless
+ * for every pixel kept and the original file is untouched; regenerate with
+ * sharp .extract({left:44, top:96, width:606, height:191}).
+ */
+import heroCar from "@/public/hero-car-trimmed.png";
 
 export function Hero() {
   return (
@@ -63,16 +72,20 @@ export function Hero() {
           </Reveal>
         </div>
 
-        {/* shrink-0: as a flex item this wrapper is shrinkable by default, and
-            once the content is taller than the viewport the flex algorithm
-            compresses it — which quietly overrode the image's own max-h and
-            rendered the car smaller than asked for. */}
-        <div className="relative shrink-0">
+        {/* shrink-0 because a flex item is shrinkable by default, and once the
+            content is taller than the viewport the flex algorithm compresses
+            this wrapper rather than letting the image's own caps decide.
+            mx-[calc(50%-50vw)] cancels the page container so the car can run
+            wider than max-w-6xl. Safe because the section is overflow-x-clip,
+            which stops the 100vw breakout from widening the document when a
+            classic scrollbar is present. */}
+        <div className="relative shrink-0 mx-[calc(50%-50vw)]">
           {/* Contact shadow. The asset is a clean cutout with no ground plane
-              of its own, so without this the car floats. */}
+              of its own, so without this the car floats. Sits at the very foot
+              now that the trimmed asset ends at the tyres. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-[9%] mx-auto h-10 w-[68%] max-w-[34rem] rounded-[50%] opacity-25 blur-2xl dark:opacity-40"
+            className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-8 w-[62%] max-w-[46rem] rounded-[50%] opacity-25 blur-2xl dark:opacity-40"
             style={{
               backgroundImage:
                 "radial-gradient(closest-side, var(--color-ink) 0%, transparent 100%)",
@@ -82,7 +95,7 @@ export function Hero() {
           <Image
             src={heroCar}
             alt=""
-            sizes="(min-width: 768px) 54rem, 100vw"
+            sizes="(min-width: 768px) 80rem, 100vw"
             loading="eager"
             fetchPriority="high"
             /*
@@ -94,22 +107,34 @@ export function Hero() {
              * width attribute — so the car silently rendered at 80% and no
              * amount of raising max-h moved it.
              *
-             * The three caps are: 54rem art direction, 100% to stay inside
-             * the gutters, and the viewport-height limit re-expressed as a
-             * width via the 666/375 = 1.776 aspect ratio, which is what keeps
-             * the hero inside one screen on a short window.
+             * The three caps are: 80rem art direction, 100% to stay inside the
+             * viewport, and a height limit re-expressed as a width via the
+             * trimmed 606/191 = 3.173 aspect ratio.
              *
-             * 54rem is ~1.3x the asset's native 666px, so this is deliberately
-             * upscaled — the brief was a big car and there is no 2x version.
-             * Drop in a ~1700px render and it sharpens for free.
+             * That height limit is `100dvh - 31rem`, not a flat `Nvh`: the
+             * chrome above the car (nav, eyebrow, headline, subheading, fare
+             * bar, scroll cue) is a fixed ~496px that does NOT scale with the
+             * viewport, so a percentage cap over-allocates on short windows —
+             * 46vh fit at 900px tall and overflowed by 55px at 720px. Giving
+             * the car whatever is left over instead makes it as large as the
+             * 80rem cap allows on a tall screen and shrink only when it
+             * genuinely has to.
+             *
+             * 80rem is ~2.1x the trimmed asset's native 606px, so this is
+             * heavily upscaled and will read soft on a high-density display.
+             * That is the cost of the requested size at this source
+             * resolution — a ~1300px-wide render of the same car removes it
+             * entirely with no code change.
              */
-            className="relative mx-auto -mt-4 h-auto w-full max-w-[min(54rem,100%,calc(44vh*1.776))] sm:-mt-10"
+            className="relative mx-auto h-auto w-full max-w-[min(80rem,100%,calc((100dvh-31rem)*3.173))]"
           />
         </div>
 
-        {/* The negative margin eats the asset's own transparent bottom band,
-            which is otherwise dead space between the wheels and the cue. */}
-        <div className="-mt-8 flex shrink-0 justify-center pb-4">
+        {/* Positive margin, not negative: the untrimmed asset had ~88px of
+            transparent band below the tyres that a negative margin could eat
+            for free. The trimmed one ends at the rubber, so the same negative
+            margin pulled the cue on top of the car. */}
+        <div className="mt-3 flex shrink-0 justify-center pb-4">
           <a
             href="#ride"
             aria-label={HERO.scrollCueLabel}
