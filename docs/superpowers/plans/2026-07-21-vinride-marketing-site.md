@@ -40,6 +40,7 @@ Every task's requirements implicitly include this section.
 - Light: bg `#FAFAF8`, surface `#FFFFFF`, fg `#14100B`. Dark: bg `#0E1412`, surface `#161E1B`, fg `#F2F1EC`.
 - **Yellow-filled surfaces always use near-black text (`#14100B`). Never white text on yellow.** Yellow is never used for body copy or text links.
 - Colored text links use `--color-link` (green), never yellow.
+- Error/validation text uses `--color-danger` (light `#b42318`, dark `#fda29b`), never `brand-amber` — amber measures only 2.76:1 on white and fails AA.
 - All text/background pairs ≥ 4.5:1 (≥ 3:1 for text ≥ 24px), in both themes.
 - Theming is `[data-theme="dark"]` attribute-based (not a `.dark` class, not `prefers-color-scheme` media queries).
 - Raw color values appear **only** in `app/globals.css`, with exactly one permitted exception: `viewport.themeColor` in `app/layout.tsx`. HTML `<meta name="theme-color">` cannot consume a CSS custom property, so those two values must be literals. They must carry a comment cross-referencing `--bg` in `globals.css`, and any change to the `--bg` tokens must update them in the same commit. No other exception exists — a hex value anywhere else is a defect.
