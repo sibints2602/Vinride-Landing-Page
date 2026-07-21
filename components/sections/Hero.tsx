@@ -1,8 +1,7 @@
 import Image from "next/image";
 import { HERO } from "@/content/site";
+import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
-import { Reveal } from "@/components/ui/Reveal";
-import { FareEstimator } from "@/components/sections/FareEstimator";
 /**
  * Trimmed to the car's alpha bounding box (606x191) from the supplied
  * Hero-Car.png (666x375), which carries 96px of transparent margin above the
@@ -43,8 +42,7 @@ export function Hero() {
 
       {/* justify-center, not an mt-auto on the car: on a tall window that
           parked the car at the foot and pooled every spare pixel into one gap
-          between it and the fare bar. Centring splits the slack above and
-          below the group instead. */}
+          above it. Centring splits the slack above and below the group. */}
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-medium text-fg-muted shadow-lift">
@@ -62,14 +60,18 @@ export function Hero() {
           <p className="mx-auto mt-5 max-w-xl leading-relaxed text-fg-muted sm:text-lg">
             {HERO.subheading}
           </p>
-        </div>
 
-        {/* The bar floats over the car: z-10 here, and the car pulled up
-            underneath it below. */}
-        <div className="relative z-10 mx-auto mt-8 w-full max-w-2xl">
-          <Reveal>
-            <FareEstimator />
-          </Reveal>
+          {/* The fare bar used to be the hero's call to action. With it gone
+              the section had none at all, so the button pair it originally
+              replaced comes back. */}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button href={HERO.primaryCta.href} variant="primary" size="lg">
+              {HERO.primaryCta.label}
+            </Button>
+            <Button href={HERO.secondaryCta.href} variant="secondary" size="lg">
+              {HERO.secondaryCta.label}
+            </Button>
+          </div>
         </div>
 
         {/* shrink-0 because a flex item is shrinkable by default, and once the
@@ -111,9 +113,9 @@ export function Hero() {
              * viewport, and a height limit re-expressed as a width via the
              * trimmed 606/191 = 3.173 aspect ratio.
              *
-             * That height limit is `100dvh - 31rem`, not a flat `Nvh`: the
-             * chrome above the car (nav, eyebrow, headline, subheading, fare
-             * bar, scroll cue) is a fixed ~496px that does NOT scale with the
+             * That height limit is `100dvh - 29rem`, not a flat `Nvh`: the
+             * chrome above the car (nav, eyebrow, headline, subheading, CTA
+             * buttons, scroll cue) is a fixed ~464px that does NOT scale with the
              * viewport, so a percentage cap over-allocates on short windows —
              * 46vh fit at 900px tall and overflowed by 55px at 720px. Giving
              * the car whatever is left over instead makes it as large as the
@@ -126,7 +128,7 @@ export function Hero() {
              * resolution — a ~1300px-wide render of the same car removes it
              * entirely with no code change.
              */
-            className="relative mx-auto h-auto w-full max-w-[min(80rem,100%,calc((100dvh-31rem)*3.173))]"
+            className="relative mx-auto h-auto w-full max-w-[min(80rem,100%,calc((100dvh-29rem)*3.173))]"
           />
         </div>
 
