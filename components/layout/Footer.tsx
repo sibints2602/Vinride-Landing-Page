@@ -32,7 +32,12 @@ export function Footer() {
 
           {FOOTER_COLUMNS.map((column) => (
             <nav key={column.heading} aria-label={column.heading}>
-              <h3 className="text-sm font-semibold text-fg">{column.heading}</h3>
+              {/* font-sans: these are 14px UI labels, not display type. The
+                  serif has no bold cut, so leaving them on --font-display
+                  would hand font-semibold to the browser to synthesise. */}
+              <h3 className="font-sans text-sm font-semibold text-fg">
+                {column.heading}
+              </h3>
               <ul className="mt-4 flex flex-col gap-3">
                 {column.links.map((link) => (
                   <li key={link.label}>
@@ -50,7 +55,7 @@ export function Footer() {
         </div>
 
         <div id="cities" className="mt-12 border-t border-line pt-10">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-fg-muted">
+          <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-fg-muted">
             {FOOTER.citiesHeading}
           </h3>
           <ul className="mt-4 flex flex-wrap gap-y-2 text-sm text-fg-muted">

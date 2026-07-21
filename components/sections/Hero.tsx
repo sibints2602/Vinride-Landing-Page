@@ -148,7 +148,7 @@ export function Hero() {
                   <span className="sr-only">{stat.srText}</span>
                   <span
                     aria-hidden="true"
-                    className="block font-display text-2xl text-fg"
+                    className="block font-display text-3xl text-fg"
                   >
                     {stat.value}
                     {stat.suffix}

@@ -1,18 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Geist, Instrument_Serif } from "next/font/google";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import "./globals.css";
 
-const inter = Inter({
+// Variable font (wght 100-900), so `weight` is omitted deliberately.
+const geist = Geist({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-geist",
 });
 
-const outfit = Outfit({
+// Instrument Serif is NOT variable and ships weight 400 only, so `weight` is
+// required here and "400" is the only value that typechecks. Never pair it
+// with a font-bold/semibold utility: there is no bold cut, so the browser
+// would synthesise one and smear the serif's contrast.
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-outfit",
+  variable: "--font-instrument-serif",
 });
 
 export const metadata: Metadata = {
@@ -46,7 +52,7 @@ export default function RootLayout({
       data-theme="light"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${inter.variable} ${outfit.variable} h-full`}
+      className={`${geist.variable} ${instrumentSerif.variable} h-full`}
     >
       <head>
         <ThemeScript />
