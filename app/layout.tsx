@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   },
 };
 
+// These two values duplicate --bg (light) and --bg (dark) from app/globals.css.
+// <meta name="theme-color"> cannot read a CSS custom property, so they must be
+// literals. If the --bg tokens change, update these in the same commit.
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafaf8" },
