@@ -42,6 +42,7 @@ Every task's requirements implicitly include this section.
 - Colored text links use `--color-link` (green), never yellow.
 - All text/background pairs ≥ 4.5:1 (≥ 3:1 for text ≥ 24px), in both themes.
 - Theming is `[data-theme="dark"]` attribute-based (not a `.dark` class, not `prefers-color-scheme` media queries).
+- Raw color values appear **only** in `app/globals.css`, with exactly one permitted exception: `viewport.themeColor` in `app/layout.tsx`. HTML `<meta name="theme-color">` cannot consume a CSS custom property, so those two values must be literals. They must carry a comment cross-referencing `--bg` in `globals.css`, and any change to the `--bg` tokens must update them in the same commit. No other exception exists — a hex value anywhere else is a defect.
 
 **Accessibility (non-negotiable, applies to every component)**
 - All interactive elements reachable and operable by keyboard, with a visible focus ring.
@@ -59,7 +60,7 @@ Every task's requirements implicitly include this section.
 
 | Path | Responsibility |
 |---|---|
-| `app/globals.css` | Tailwind import, dark variant, design tokens, base styles. The **only** place raw color values appear. |
+| `app/globals.css` | Tailwind import, dark variant, design tokens, base styles. The **only** place raw color values appear, with one forced exception — see below. |
 | `app/layout.tsx` | Root layout: fonts, metadata, viewport, theme script, `<html>` attributes. |
 | `app/page.tsx` | Composes the eleven sections in order. No styling logic. |
 | `content/site.ts` | Every user-facing string and placeholder datum, typed. |
