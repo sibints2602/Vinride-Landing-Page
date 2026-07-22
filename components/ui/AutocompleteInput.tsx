@@ -135,7 +135,7 @@ export function AutocompleteInput({
         <ul
           id={listId}
           role="listbox"
-          className="absolute left-0 top-full z-30 mt-2 max-h-64 w-full min-w-[12rem] overflow-auto rounded-2xl border border-line bg-surface p-1.5 shadow-lift-lg"
+          className="absolute left-0 top-full z-30 mt-2 max-h-64 w-full min-w-48 overflow-auto rounded-2xl border border-line bg-surface p-1.5 shadow-lift-lg"
         >
           {filtered.map((option, i) => (
             <li

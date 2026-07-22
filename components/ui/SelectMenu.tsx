@@ -129,7 +129,7 @@ export function SelectMenu({
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onButtonKeyDown}
         className={cn(
-          "flex w-full items-center justify-between gap-2 text-sm text-fg",
+          "flex w-full items-center justify-between gap-2 text-sm text-fg focus:outline-none focus-visible:outline-none",
           className,
         )}
       >
@@ -145,7 +145,7 @@ export function SelectMenu({
           tabIndex={-1}
           aria-activedescendant={`${listId}-opt-${active}`}
           onKeyDown={onListKeyDown}
-          className="absolute left-0 top-full z-30 mt-2 max-h-64 w-full min-w-[11rem] overflow-auto rounded-2xl border border-line bg-surface p-1.5 shadow-lift-lg focus:outline-none"
+          className="absolute left-0 top-full z-30 mt-2 max-h-64 w-full min-w-44 overflow-auto rounded-2xl border border-line bg-surface p-1.5 shadow-lift-lg focus:outline-none"
         >
           {options.map((option, i) => (
             <li

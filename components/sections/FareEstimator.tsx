@@ -150,7 +150,7 @@ export function FareEstimator() {
   // marking which segment has focus. leading-tight + a lighter placeholder
   // keep the value line close under its micro-label.
   const fieldInput =
-    "w-full rounded-sm border-0 bg-transparent p-0 text-sm leading-tight text-fg placeholder:text-fg-muted/70";
+    "w-full rounded-sm border-0 bg-transparent p-0 text-sm leading-tight text-fg placeholder:text-fg-muted/70 focus:outline-none focus-visible:outline-none";
 
   // Small, quiet uppercase caption over each value — the compact search-bar
   // convention, and much tidier than a full-size label stacked on the input.
