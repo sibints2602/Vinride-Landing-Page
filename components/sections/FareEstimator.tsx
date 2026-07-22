@@ -13,6 +13,8 @@ import { estimateFare, type FareEstimate } from "@/lib/fare";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
+import { SelectMenu } from "@/components/ui/SelectMenu";
+import { AutocompleteInput } from "@/components/ui/AutocompleteInput";
 
 type ErrorField = "pickup" | "drop" | "both";
 
@@ -38,7 +40,6 @@ export function FareEstimator() {
   const dropInputId = `${uid}-drop`;
   const vehicleSelectId = `${uid}-vehicle`;
   const errorId = `${uid}-error`;
-  const localitiesDatalistId = `${uid}-localities`;
 
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
@@ -170,21 +171,17 @@ export function FareEstimator() {
         <div className="rounded-3xl border border-line bg-surface p-1.5 shadow-lift-lg lg:rounded-full">
           <div className="flex flex-col lg:flex-row lg:items-center">
             <div className="min-w-0 flex-1 px-4 py-2 lg:px-5">
-              <label
-                htmlFor={pickupInputId}
-                className={fieldLabel}
-              >
+              <label htmlFor={pickupInputId} className={fieldLabel}>
                 {ESTIMATOR.pickupLabel}
               </label>
-              <input
+              <AutocompleteInput
                 id={pickupInputId}
-                type="text"
-                list={localitiesDatalistId}
                 value={pickup}
-                onChange={(event) => handlePickupChange(event.target.value)}
+                onChange={handlePickupChange}
+                options={LOCALITIES}
                 placeholder={ESTIMATOR.pickupPlaceholder}
-                aria-invalid={pickupInvalid || undefined}
-                aria-describedby={pickupInvalid ? errorId : undefined}
+                ariaInvalid={pickupInvalid}
+                ariaDescribedBy={pickupInvalid ? errorId : undefined}
                 className={fieldInput}
               />
             </div>
@@ -192,21 +189,17 @@ export function FareEstimator() {
             <div aria-hidden="true" className={divider} />
 
             <div className="min-w-0 flex-1 px-4 py-2 lg:px-5">
-              <label
-                htmlFor={dropInputId}
-                className={fieldLabel}
-              >
+              <label htmlFor={dropInputId} className={fieldLabel}>
                 {ESTIMATOR.dropLabel}
               </label>
-              <input
+              <AutocompleteInput
                 id={dropInputId}
-                type="text"
-                list={localitiesDatalistId}
                 value={drop}
-                onChange={(event) => handleDropChange(event.target.value)}
+                onChange={handleDropChange}
+                options={LOCALITIES}
                 placeholder={ESTIMATOR.dropPlaceholder}
-                aria-invalid={dropInvalid || undefined}
-                aria-describedby={dropInvalid ? errorId : undefined}
+                ariaInvalid={dropInvalid}
+                ariaDescribedBy={dropInvalid ? errorId : undefined}
                 className={fieldInput}
               />
             </div>
@@ -214,43 +207,24 @@ export function FareEstimator() {
             <div aria-hidden="true" className={divider} />
 
             {/*
-             * A native <select> rather than the chip row this used to be.
-             * Five chips cannot sit inside the bar without wrapping it to two
-             * rows, and the whole point of moving them in here was to make it
-             * compact. A select also gets keyboard support, type-ahead and the
-             * platform picker on touch for free. onChange still routes through
-             * handleVehicleChange, so the recompute-on-change behaviour and its
-             * validation are unchanged.
+             * A custom SelectMenu, not a native <select>: the browser's option
+             * popup can't be themed and looked out of place. onChange still
+             * routes through handleVehicleChange, so the recompute-on-change
+             * behaviour and its validation are unchanged.
              */}
             <div className="min-w-0 px-4 py-2 lg:px-5">
-              <label
-                htmlFor={vehicleSelectId}
-                className={fieldLabel}
-              >
+              <label htmlFor={vehicleSelectId} className={fieldLabel}>
                 {ESTIMATOR.rideTypeGroupLabel}
               </label>
-              <div className="relative">
-                <select
-                  id={vehicleSelectId}
-                  value={vehicleId}
-                  onChange={(event) =>
-                    handleVehicleChange(event.target.value as VehicleTypeId)
-                  }
-                  className={cn(fieldInput, "appearance-none pr-5")}
-                >
-                  {VEHICLE_TYPES.map((vehicle) => (
-                    <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.label}
-                    </option>
-                  ))}
-                </select>
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-fg-muted"
-                >
-                  <Icon name="chevron-down" className="h-3.5 w-3.5" />
-                </span>
-              </div>
+              <SelectMenu
+                id={vehicleSelectId}
+                value={vehicleId}
+                onChange={(v) => handleVehicleChange(v as VehicleTypeId)}
+                options={VEHICLE_TYPES.map((vehicle) => ({
+                  value: vehicle.id,
+                  label: vehicle.label,
+                }))}
+              />
             </div>
 
             {/* Icon-only once the bar is a single row, where the labelled
@@ -266,12 +240,6 @@ export function FareEstimator() {
             </button>
           </div>
         </div>
-
-        <datalist id={localitiesDatalistId}>
-          {LOCALITIES.map((locality) => (
-            <option key={locality} value={locality} />
-          ))}
-        </datalist>
 
         {error && (
           <p
