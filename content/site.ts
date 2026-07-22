@@ -167,6 +167,20 @@ export const STATS: Stat[] = [
   { value: 4.8, suffix: "★", label: "Average rating", srText: "4.8 out of 5 average rating" },
 ];
 
+export interface RideOption {
+  id: string;
+  /** Small accent label on the card, e.g. "Car ride". */
+  title: string;
+  /** Bold headline line under the label. */
+  headline: string;
+  /** Quiet caption line, the card's "meta" row. */
+  meta: string;
+  /** Longer description shown in the right-hand preview. */
+  body: string;
+  /** Key of the ICONS map in components/ui/Icon.tsx. */
+  icon: string;
+}
+
 export const RIDE_OPTIONS = {
   eyebrow: "Ride",
   heading: "Three ways to get there.",
@@ -174,21 +188,30 @@ export const RIDE_OPTIONS = {
     "A quick solo dash, everyday comfort, or a shared seat for less — pick what fits the trip.",
   options: [
     {
+      id: "car",
       title: "Car ride",
-      body: "Sedans and SUVs with vetted drivers. Comfort for the daily commute, the airport run or a night out.",
+      headline: "Comfort for the daily commute",
+      meta: "Sedans & SUVs",
+      body: "Vetted drivers and AC cabs with upfront fares — for the office run, the airport dash or a night out with friends.",
       icon: "car",
     },
     {
+      id: "bike",
       title: "Bike ride",
-      body: "Beat the jam on two wheels. The quickest, most affordable way to cut across town.",
+      headline: "Beat the traffic, solo",
+      meta: "Fastest & cheapest",
+      body: "Zip across town on two wheels. The quickest, most affordable way to cut straight through the jam.",
       icon: "bike",
     },
     {
+      id: "share",
       title: "Ride sharing",
-      body: "Share the trip and split the fare. Get matched with riders already heading your way.",
+      headline: "Share the trip, split the fare",
+      meta: "Best value",
+      body: "Get matched with riders already heading your way and pay less for the very same route.",
       icon: "users",
     },
-  ] satisfies Feature[],
+  ] satisfies RideOption[],
 } as const;
 
 export const WHY_VINRIDE = {
