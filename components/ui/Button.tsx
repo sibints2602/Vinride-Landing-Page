@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary";
+type Variant = "primary" | "secondary" | "contrast";
 type Size = "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
@@ -10,6 +10,11 @@ const VARIANTS: Record<Variant, string> = {
     "bg-brand-yellow text-ink hover:bg-brand-amber hover:text-ink shadow-sm",
   secondary:
     "bg-surface text-fg border border-line hover:border-brand-green",
+  // Inverts with the theme: --fg is dark in light mode and light in dark, --bg
+  // the reverse, so bg-fg/text-bg is always a near-black button with light
+  // text on the light page and a light button with dark text on the dark page
+  // — the Uber-style solid nav button, without a hardcoded colour.
+  contrast: "bg-fg text-bg hover:bg-fg/90 shadow-sm",
 };
 
 const SIZES: Record<Size, string> = {
