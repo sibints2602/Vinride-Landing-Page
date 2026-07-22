@@ -167,18 +167,28 @@ export const STATS: Stat[] = [
   { value: 4.8, suffix: "★", label: "Average rating", srText: "4.8 out of 5 average rating" },
 ];
 
-export const RIDES_SECTION = {
-  eyebrow: "Rides",
-  heading: "A ride for every trip.",
-  subheading: "From a two-minute hop across town to a two-hour haul between cities.",
-  allLabel: "All",
-  filterGroupLabel: "Filter ride types",
-  seatsLabel: (seats: number) => (seats === 1 ? "1 seat" : `${seats} seats`),
-  etaLabel: (minutes: number) => `~${minutes} min away`,
-  fromLabel: "from",
-  /** Announced via aria-live when the ride-type filter changes the visible card count. */
-  filterResultsLabel: (shown: number, total: number) =>
-    `Showing ${shown} of ${total} ride type${total === 1 ? "" : "s"}`,
+export const RIDE_OPTIONS = {
+  eyebrow: "Ride",
+  heading: "Three ways to get there.",
+  subheading:
+    "A quick solo dash, everyday comfort, or a shared seat for less — pick what fits the trip.",
+  options: [
+    {
+      title: "Car ride",
+      body: "Sedans and SUVs with vetted drivers. Comfort for the daily commute, the airport run or a night out.",
+      icon: "car",
+    },
+    {
+      title: "Bike ride",
+      body: "Beat the jam on two wheels. The quickest, most affordable way to cut across town.",
+      icon: "bike",
+    },
+    {
+      title: "Ride sharing",
+      body: "Share the trip and split the fare. Get matched with riders already heading your way.",
+      icon: "users",
+    },
+  ] satisfies Feature[],
 } as const;
 
 export const WHY_VINRIDE = {

@@ -3,7 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
 import { StatsStrip } from "@/components/sections/StatsStrip";
-import { RideCategories } from "@/components/sections/RideCategories";
+import { RideOptions } from "@/components/sections/RideOptions";
 import { WhyVinride } from "@/components/sections/WhyVinride";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { FareTable } from "@/components/sections/FareTable";
@@ -24,7 +24,7 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
         <StatsStrip />
-        <RideCategories />
+        <RideOptions />
         <WhyVinride />
         <HowItWorks />
         <FareTable />

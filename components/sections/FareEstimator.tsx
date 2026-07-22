@@ -255,9 +255,8 @@ export function FareEstimator() {
       {/* Always mounted (not conditionally rendered) so the aria-live region
           already exists in the DOM before its content ever changes — a
           region created at the same moment its content appears is exactly
-          the case most screen readers fail to announce (see
-          RideCategories.tsx for the same pattern). Un-styled and empty until
-          a result exists, so nothing is visible when there's nothing to
+          the case most screen readers fail to announce. Un-styled and empty
+          until a result exists, so nothing is visible when there's nothing to
           show. */}
       <div
         aria-live="polite"
