@@ -146,12 +146,18 @@ export function FareEstimator() {
 
   // Borderless field inside the bar. No focus:outline-none — the pill has no
   // per-field border, so the global :focus-visible ring is the only thing
-  // marking which segment has focus.
+  // marking which segment has focus. leading-tight + a lighter placeholder
+  // keep the value line close under its micro-label.
   const fieldInput =
-    "mt-0.5 w-full rounded-sm border-0 bg-transparent p-0 text-sm text-fg placeholder:text-fg-muted";
+    "w-full rounded-sm border-0 bg-transparent p-0 text-sm leading-tight text-fg placeholder:text-fg-muted/70";
+
+  // Small, quiet uppercase caption over each value — the compact search-bar
+  // convention, and much tidier than a full-size label stacked on the input.
+  const fieldLabel =
+    "mb-0.5 block text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-fg-muted";
 
   // Horizontal rule between stacked segments, vertical once they sit in a row.
-  const divider = "mx-4 h-px bg-line lg:mx-0 lg:h-9 lg:w-px";
+  const divider = "mx-4 h-px bg-line lg:mx-0 lg:h-7 lg:w-px";
 
   return (
     <div>
@@ -163,10 +169,10 @@ export function FareEstimator() {
             fields inside it. */}
         <div className="rounded-3xl border border-line bg-surface p-1.5 shadow-lift-lg lg:rounded-full">
           <div className="flex flex-col lg:flex-row lg:items-center">
-            <div className="min-w-0 flex-1 px-4 py-2 lg:px-6">
+            <div className="min-w-0 flex-1 px-4 py-2 lg:px-5">
               <label
                 htmlFor={pickupInputId}
-                className="block text-xs font-medium text-fg-muted"
+                className={fieldLabel}
               >
                 {ESTIMATOR.pickupLabel}
               </label>
@@ -185,10 +191,10 @@ export function FareEstimator() {
 
             <div aria-hidden="true" className={divider} />
 
-            <div className="min-w-0 flex-1 px-4 py-2 lg:px-6">
+            <div className="min-w-0 flex-1 px-4 py-2 lg:px-5">
               <label
                 htmlFor={dropInputId}
-                className="block text-xs font-medium text-fg-muted"
+                className={fieldLabel}
               >
                 {ESTIMATOR.dropLabel}
               </label>
@@ -216,10 +222,10 @@ export function FareEstimator() {
              * handleVehicleChange, so the recompute-on-change behaviour and its
              * validation are unchanged.
              */}
-            <div className="min-w-0 px-4 py-2 lg:px-6">
+            <div className="min-w-0 px-4 py-2 lg:px-5">
               <label
                 htmlFor={vehicleSelectId}
-                className="block text-xs font-medium text-fg-muted"
+                className={fieldLabel}
               >
                 {ESTIMATOR.rideTypeGroupLabel}
               </label>
@@ -230,7 +236,7 @@ export function FareEstimator() {
                   onChange={(event) =>
                     handleVehicleChange(event.target.value as VehicleTypeId)
                   }
-                  className={cn(fieldInput, "appearance-none pr-6")}
+                  className={cn(fieldInput, "appearance-none pr-5")}
                 >
                   {VEHICLE_TYPES.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
@@ -242,7 +248,7 @@ export function FareEstimator() {
                   aria-hidden="true"
                   className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-fg-muted"
                 >
-                  <Icon name="chevron-down" className="h-4 w-4" />
+                  <Icon name="chevron-down" className="h-3.5 w-3.5" />
                 </span>
               </div>
             </div>
@@ -253,7 +259,7 @@ export function FareEstimator() {
                 reads as decoration. */}
             <button
               type="submit"
-              className="mt-1.5 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber lg:mt-0 lg:w-11"
+              className="mt-1.5 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber lg:ml-1 lg:mt-0 lg:h-10 lg:w-10"
             >
               <Icon name="search" className="h-[18px] w-[18px]" />
               <span className="lg:sr-only">{ESTIMATOR.submitLabel}</span>
