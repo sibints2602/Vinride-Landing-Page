@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import { BRAND, HERO, NAV_LINKS, NAV_PRIMARY_LABEL } from "@/content/site";
-import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 
@@ -74,20 +73,22 @@ export function Navbar() {
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
             {/*
-             * Hidden via a wrapper, not `className="hidden"` on the Button.
-             * `cn` is a plain join with no conflict resolution, so a `hidden`
-             * passed through className loses to the `inline-flex` in the
-             * Button's own base classes and the CTA stays visible.
+             * Not a filled Button: at rest it is plain primary-yellow text,
+             * and on hover it becomes an outlined pill (yellow border) with
+             * white text. `border border-transparent` at rest reserves the
+             * border's space so nothing shifts when it appears on hover.
              *
-             * `contrast` (near-black in light mode, near-white in dark) instead
-             * of the yellow primary, matching the reference's solid dark nav
-             * button. The brand yellow still leads inside the hero.
+             * hover:bg-ink is what makes the white text legible: on the light
+             * page white-on-white would vanish, so the pill fills near-black.
+             * In dark mode --color-ink ≈ --bg, so the fill is invisible and it
+             * still reads as a transparent bordered pill.
              */}
-            <div className="hidden md:block">
-              <Button href={HERO.primaryCta.href} variant="contrast" size="md">
-                {HERO.primaryCta.label}
-              </Button>
-            </div>
+            <a
+              href={HERO.primaryCta.href}
+              className="hidden h-10 items-center justify-center rounded-full border border-transparent px-4 text-sm font-semibold text-brand-yellow transition-colors duration-200 hover:border-brand-yellow hover:bg-ink hover:text-white md:inline-flex"
+            >
+              {HERO.primaryCta.label}
+            </a>
             <MobileMenu />
           </div>
         </div>
