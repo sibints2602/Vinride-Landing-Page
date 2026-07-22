@@ -4,29 +4,45 @@ import { FareEstimator } from "@/components/sections/FareEstimator";
 import WorldMap from "@/components/ui/world-map";
 
 /**
- * Domestic routes between Vinride's launch cities — the map is decorative, so
- * these carry no text, but choosing Indian metros over the source component's
- * intercontinental "nomad" routes keeps it honest to a 12-city cab service and
- * to the Outstation (city-to-city) ride type. Delhi and Mumbai act as hubs so
- * the arcs read as a network rather than a line.
+ * The source component's intercontinental spread — kept because a scattered
+ * set of long arcs reads as a network, where the earlier India-only cluster
+ * collapsed into a knot of overlapping loops (short routes + the fixed 50px
+ * arc height). Delhi stays a hub, which keeps a thread of relevance to an
+ * Indian service; the map is decorative (aria-hidden), so it carries no claim.
  */
-const CITY_ROUTES = [
-  { start: { lat: 28.61, lng: 77.21 }, end: { lat: 19.08, lng: 72.88 } }, // Delhi → Mumbai
-  { start: { lat: 28.61, lng: 77.21 }, end: { lat: 13.08, lng: 80.27 } }, // Delhi → Chennai
-  { start: { lat: 28.61, lng: 77.21 }, end: { lat: 22.57, lng: 88.36 } }, // Delhi → Kolkata
-  { start: { lat: 19.08, lng: 72.88 }, end: { lat: 12.97, lng: 77.59 } }, // Mumbai → Bengaluru
-  { start: { lat: 19.08, lng: 72.88 }, end: { lat: 26.91, lng: 75.79 } }, // Mumbai → Jaipur
-  { start: { lat: 17.38, lng: 78.49 }, end: { lat: 22.57, lng: 88.36 } }, // Hyderabad → Kolkata
+const GLOBAL_ROUTES = [
+  { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: 34.0522, lng: -118.2437 } }, // Alaska → LA
+  { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: -15.7975, lng: -47.8919 } }, // Alaska → Brazil
+  { start: { lat: -15.7975, lng: -47.8919 }, end: { lat: 38.7223, lng: -9.1393 } }, // Brazil → Lisbon
+  { start: { lat: 51.5074, lng: -0.1278 }, end: { lat: 28.6139, lng: 77.209 } }, // London → Delhi
+  { start: { lat: 28.6139, lng: 77.209 }, end: { lat: 43.1332, lng: 131.9113 } }, // Delhi → Vladivostok
+  { start: { lat: 28.6139, lng: 77.209 }, end: { lat: -1.2921, lng: 36.8219 } }, // Delhi → Nairobi
 ];
 
 export function Hero() {
   return (
-    // overflow-x-clip is a cheap guard against any child (the map's arcs at the
-    // viewBox edge) nudging the document wider on narrow screens.
-    <section id="top" className="relative overflow-x-clip pt-28 sm:pt-32">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    // isolate creates a stacking context so the -z-10 map sits behind this
+    // section's own content but never behind the page. overflow-x-clip
+    // contains the map's min-width overscan on narrow screens without
+    // creating a scroll container.
+    <section
+      id="top"
+      className="relative isolate flex min-h-[44rem] items-center overflow-x-clip py-28 sm:min-h-[48rem] sm:py-32"
+    >
+      {/* The map is now the hero's backdrop, not a band below it. Centred and
+          given a min width so it stays a full-bleed field even on phones,
+          where a 2:1 box would otherwise shrink to a thin strip. Its own
+          top/bottom mask fades it into --bg. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center"
+      >
+        <WorldMap dots={GLOBAL_ROUTES} className="min-w-[64rem]" />
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-medium text-fg-muted shadow-lift">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/80 px-4 py-1.5 text-sm font-medium text-fg-muted shadow-lift backdrop-blur-sm">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-green" />
             {HERO.eyebrow}
           </span>
@@ -45,13 +61,6 @@ export function Hero() {
             <FareEstimator />
           </Reveal>
         </div>
-      </div>
-
-      {/* Full-bleed: the map is the hero's visual field, so it spans the
-          viewport rather than sitting inside the 6xl content column. The map's
-          own top/bottom mask fades it into the page. */}
-      <div className="mt-6 w-full sm:-mt-4">
-        <WorldMap dots={CITY_ROUTES} />
       </div>
     </section>
   );
