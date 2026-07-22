@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RIDE_OPTIONS } from "@/content/site";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 const OPTIONS = RIDE_OPTIONS.options;
 
-// Icon-tile tint and preview wash per card, in authored order.
 const TILE_TINTS = [
   "bg-brand-yellow/15 text-fg",
   "bg-brand-green/15 text-fg",
@@ -22,40 +21,70 @@ const PREVIEW_WASH = [
   "from-brand-green/20 via-brand-yellow/10",
 ] as const;
 
-/**
- * Fanned-deck transform for card `i` in a stack of `total`, given which card
- * is active. Cascades each card down-and-right with a shared 3D tilt (the
- * parent supplies the perspective); the active card is pulled forward on the
- * Z axis and lifted, so it reads as "popped out" of the stack.
- */
-function cardTransform(i: number, active: number, total: number): CSSProperties {
-  const isActive = i === active;
-  const x = i * 40;
-  const y = i * 74 - (isActive ? 16 : 0);
-  const z = isActive ? 60 : i * -60;
-  return {
-    transform: `translate3d(${x}px, ${y}px, ${z}px) rotateX(6deg) rotateY(-18deg)`,
-    zIndex: isActive ? total + 1 : i,
-    opacity: isActive ? 1 : 0.55,
-  };
+// Cards stick just below the fixed nav; each one 1.5rem lower than the last so
+// the pile shows a peeking edge. The active card is the lowest one that has
+// reached its sticky position, i.e. the last whose top has crossed this line.
+const STICKY_TOP_REM = 7;
+const CARD_STEP_REM = 1.5;
+const ACTIVE_LINE_PX = (STICKY_TOP_REM + (OPTIONS.length - 1) * CARD_STEP_REM) * 16 + 24;
+
+/** The plain-list rendering, shared by mobile and the reduced-motion path. */
+function PlainList({ className }: { className?: string }) {
+  return (
+    <div className={cn("mt-10 grid gap-6 sm:grid-cols-2", className)}>
+      {OPTIONS.map((option, index) => (
+        <Reveal key={option.id} delay={index * REVEAL_STAGGER_MS}>
+          <Card className="flex h-full flex-col gap-4">
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-xl",
+                TILE_TINTS[index],
+              )}
+            >
+              <Icon name={option.icon} className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-link">{option.title}</p>
+              <h3 className="mt-1 font-display text-lg text-fg">
+                {option.headline}
+              </h3>
+              <p className="mt-2 text-sm text-fg-muted">{option.body}</p>
+            </div>
+          </Card>
+        </Reveal>
+      ))}
+    </div>
+  );
 }
 
 export function RideOptions() {
-  const [active, setActive] = useState(OPTIONS.length - 1);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const baseId = "ride-option";
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const [active, setActive] = useState(0);
 
-  function onTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, i: number) {
-    let next: number | null = null;
-    if (event.key === "ArrowDown" || event.key === "ArrowRight") next = (i + 1) % OPTIONS.length;
-    else if (event.key === "ArrowUp" || event.key === "ArrowLeft") next = (i - 1 + OPTIONS.length) % OPTIONS.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = OPTIONS.length - 1;
-    if (next === null) return;
-    event.preventDefault();
-    setActive(next);
-    tabRefs.current[next]?.focus();
-  }
+  // Scrollspy: on each frame the scroll changes, find the last card whose top
+  // has crossed the active line and mark it current. rAF-throttled and it only
+  // ever sets a small integer, so there are no per-frame transforms to
+  // jitter — the stacking itself is pure CSS `position: sticky`.
+  useEffect(() => {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      let next = 0;
+      cardRefs.current.forEach((el, i) => {
+        if (el && el.getBoundingClientRect().top <= ACTIVE_LINE_PX) next = i;
+      });
+      setActive((prev) => (prev === next ? prev : next));
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <section
@@ -68,129 +97,93 @@ export function RideOptions() {
         subheading={RIDE_OPTIONS.subheading}
       />
 
-      {/* ---- Mobile / tablet: plain cards, no stack, no preview. The 3D deck
-             and side-by-side preview only make sense with the room a desktop
-             gives. ---- */}
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:hidden">
-        {OPTIONS.map((option, index) => (
-          <Reveal key={option.id} delay={index * REVEAL_STAGGER_MS}>
-            <Card className="flex h-full flex-col gap-4">
-              <div
-                className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-xl",
-                  TILE_TINTS[index],
-                )}
-              >
-                <Icon name={option.icon} className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-link">{option.title}</p>
-                <h3 className="mt-1 font-display text-lg text-fg">
-                  {option.headline}
-                </h3>
-                <p className="mt-2 text-sm text-fg-muted">{option.body}</p>
-              </div>
-            </Card>
-          </Reveal>
-        ))}
-      </div>
+      {/* Mobile / tablet: plain cards (the sticky two-column scrollytelling
+          needs desktop width). */}
+      <PlainList className="lg:hidden" />
 
-      {/* ---- Desktop: stacked deck (tablist) on the left, preview on the
-             right. ---- */}
-      <div className="mt-14 hidden lg:grid lg:grid-cols-2 lg:items-center lg:gap-6">
-        <div
-          role="tablist"
-          aria-label={RIDE_OPTIONS.heading}
-          aria-orientation="vertical"
-          className="relative h-[26rem] [perspective:1600px]"
-        >
+      {/* Desktop: content cards stack up on the left (CSS sticky), a sticky
+          preview on the right swaps to whichever card is active. */}
+      <div className="mt-10 hidden lg:grid lg:grid-cols-2 lg:gap-12">
+        <div>
           {OPTIONS.map((option, i) => {
             const isActive = i === active;
             return (
-              <button
+              <article
                 key={option.id}
                 ref={(el) => {
-                  tabRefs.current[i] = el;
+                  cardRefs.current[i] = el;
                 }}
-                type="button"
-                role="tab"
-                id={`${baseId}-tab-${i}`}
-                aria-selected={isActive}
-                aria-controls={`${baseId}-panel-${i}`}
-                tabIndex={isActive ? 0 : -1}
-                onMouseEnter={() => setActive(i)}
-                onFocus={() => setActive(i)}
-                onKeyDown={(event) => onTabKeyDown(event, i)}
-                style={cardTransform(i, active, OPTIONS.length)}
+                style={{
+                  top: `${STICKY_TOP_REM + i * CARD_STEP_REM}rem`,
+                  marginBottom: i < OPTIONS.length - 1 ? "46vh" : undefined,
+                  // Cards already behind the active one recede a touch. Driven
+                  // by `active` (state), not the raw scroll, so it changes once
+                  // per step — never every frame.
+                  transform: i < active ? `scale(${1 - (active - i) * 0.04})` : undefined,
+                  transformOrigin: "top center",
+                }}
                 className={cn(
-                  "absolute left-0 top-0 w-[82%] origin-top-left rounded-2xl border bg-surface p-5 text-left shadow-lift-lg transition-[transform,opacity,box-shadow] duration-300 ease-out focus:outline-none",
+                  "sticky rounded-[2rem] border bg-surface p-8 shadow-lift-lg transition-[transform,border-color] duration-300 ease-out",
                   isActive ? "border-brand-yellow/40" : "border-line",
                 )}
               >
                 <div className="flex items-center gap-3">
                   <span
                     className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-full",
+                      "flex h-10 w-10 items-center justify-center rounded-full",
                       TILE_TINTS[i],
                     )}
                   >
                     <Icon name={option.icon} className="h-5 w-5" />
                   </span>
-                  <span
-                    className={cn(
-                      "text-sm font-semibold",
-                      isActive ? "text-link" : "text-fg-muted",
-                    )}
-                  >
+                  <span className="text-sm font-semibold text-link">
                     {option.title}
                   </span>
                 </div>
-                <p
-                  className={cn(
-                    "mt-4 font-display text-lg",
-                    isActive ? "text-fg" : "text-fg-muted",
-                  )}
-                >
-                  {option.headline}
-                </p>
-                <p className="mt-3 text-sm text-fg-muted">{option.meta}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="relative h-[26rem]">
-          {OPTIONS.map((option, i) => {
-            const isActive = i === active;
-            return (
-              <div
-                key={option.id}
-                role="tabpanel"
-                id={`${baseId}-panel-${i}`}
-                aria-labelledby={`${baseId}-tab-${i}`}
-                aria-hidden={!isActive}
-                className={cn(
-                  "absolute inset-0 flex flex-col justify-end overflow-hidden rounded-3xl border border-line bg-gradient-to-br to-transparent p-8 transition-opacity duration-500",
-                  PREVIEW_WASH[i],
-                  isActive
-                    ? "opacity-100"
-                    : "pointer-events-none opacity-0",
-                )}
-              >
-                {/* Placeholder visual: a large glyph watermark standing in for
-                    per-feature photography, which the project doesn't have. */}
-                <Icon
-                  name={option.icon}
-                  className="absolute -right-6 -top-6 h-52 w-52 text-fg/10"
-                />
-                <p className="text-sm font-semibold text-link">{option.title}</p>
-                <h3 className="mt-2 max-w-sm font-display text-3xl text-fg">
+                <h3 className="mt-6 font-display text-2xl text-fg">
                   {option.headline}
                 </h3>
-                <p className="mt-3 max-w-md text-fg-muted">{option.body}</p>
-              </div>
+                <p className="mt-2 text-fg-muted">{option.body}</p>
+                <p className="mt-4 text-sm font-medium text-fg-muted">
+                  {option.meta}
+                </p>
+              </article>
             );
           })}
+          {/* Tail room so the last card, once stuck, stays the active one for a
+              scroll beat instead of the section ending the moment it pins. */}
+          <div aria-hidden="true" className="h-[44vh]" />
+        </div>
+
+        <div>
+          {/* A single preview keyed to the active option — the previous one
+              unmounts cleanly and the new one fades in, so two panels' text
+              never overlap mid-crossfade. */}
+          <div className="sticky top-28 h-[30rem]">
+            <div
+              key={active}
+              className={cn(
+                "relative flex h-full flex-col justify-end overflow-hidden rounded-[2rem] border border-line bg-linear-to-br to-transparent p-8 motion-safe:animate-preview-in",
+                PREVIEW_WASH[active],
+              )}
+            >
+              {/* Placeholder visual: a large glyph standing in for per-feature
+                  photography the project doesn't have. */}
+              <Icon
+                name={OPTIONS[active].icon}
+                className="absolute -right-8 -top-8 h-60 w-60 text-fg/[0.07]"
+              />
+              <p className="text-sm font-semibold text-link">
+                {OPTIONS[active].title}
+              </p>
+              <h3 className="mt-2 max-w-sm font-display text-3xl text-fg">
+                {OPTIONS[active].headline}
+              </h3>
+              <p className="mt-3 max-w-md text-fg-muted">
+                {OPTIONS[active].body}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
