@@ -45,46 +45,51 @@ export function Navbar() {
           </span>
         </a>
 
-        {/* Uber-style: plain text links separated by thin vertical rules,
-            rather than hover pills. The divider is a sibling element per gap
-            (not a border) so the first link has none. */}
-        <nav
-          aria-label={NAV_PRIMARY_LABEL}
-          className="hidden items-center md:flex"
-        >
-          {NAV_LINKS.map((link, i) => (
-            <Fragment key={link.href}>
-              {i > 0 && (
-                <span aria-hidden="true" className="h-3.5 w-px bg-line" />
-              )}
-              <a
-                href={link.href}
-                className="px-4 text-sm font-medium text-fg-muted transition-colors duration-200 hover:text-fg"
-              >
-                {link.label}
-              </a>
-            </Fragment>
-          ))}
-        </nav>
+        {/* Everything but the logo lives in this right-aligned group (logo
+            left, nav + actions right — the Uber arrangement), rather than the
+            nav floating in the centre. */}
+        <div className="flex items-center gap-2 sm:gap-4 lg:gap-8">
+          {/* Plain bold text links separated by thin vertical rules rather
+              than hover pills. The divider is a sibling element per gap (not a
+              border) so the first link has none. */}
+          <nav
+            aria-label={NAV_PRIMARY_LABEL}
+            className="hidden items-center md:flex"
+          >
+            {NAV_LINKS.map((link, i) => (
+              <Fragment key={link.href}>
+                {i > 0 && (
+                  <span aria-hidden="true" className="h-3.5 w-px bg-line" />
+                )}
+                <a
+                  href={link.href}
+                  className="px-4 text-sm font-semibold text-fg-muted transition-colors duration-200 hover:text-fg"
+                >
+                  {link.label}
+                </a>
+              </Fragment>
+            ))}
+          </nav>
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          <ThemeToggle />
-          {/*
-           * Hidden via a wrapper, not `className="hidden"` on the Button.
-           * `cn` is a plain join with no conflict resolution, so a `hidden`
-           * passed through className loses to the `inline-flex` in the
-           * Button's own base classes and the CTA stays visible.
-           *
-           * `contrast` (near-black in light mode, near-white in dark) instead
-           * of the yellow primary, matching the reference's solid dark nav
-           * button. The brand yellow still leads inside the hero.
-           */}
-          <div className="hidden md:block">
-            <Button href={HERO.primaryCta.href} variant="contrast" size="md">
-              {HERO.primaryCta.label}
-            </Button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            {/*
+             * Hidden via a wrapper, not `className="hidden"` on the Button.
+             * `cn` is a plain join with no conflict resolution, so a `hidden`
+             * passed through className loses to the `inline-flex` in the
+             * Button's own base classes and the CTA stays visible.
+             *
+             * `contrast` (near-black in light mode, near-white in dark) instead
+             * of the yellow primary, matching the reference's solid dark nav
+             * button. The brand yellow still leads inside the hero.
+             */}
+            <div className="hidden md:block">
+              <Button href={HERO.primaryCta.href} variant="contrast" size="md">
+                {HERO.primaryCta.label}
+              </Button>
+            </div>
+            <MobileMenu />
           </div>
-          <MobileMenu />
         </div>
       </div>
     </header>
