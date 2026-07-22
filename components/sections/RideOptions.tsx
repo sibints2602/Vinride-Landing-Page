@@ -1,24 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { RIDE_OPTIONS } from "@/content/site";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
+import carImage from "@/public/ride/Car driving-bro.png";
+import bikeImage from "@/public/ride/Order ride-bro.png";
+import shareImage from "@/public/ride/Order ride-pana.png";
 
 const OPTIONS = RIDE_OPTIONS.options;
+
+// One illustration per option, in the same order as RIDE_OPTIONS. Reorder here
+// to remap. (There is no bike-specific illustration, so Bike ride borrows the
+// "order a ride" scene.)
+const IMAGES = [carImage, bikeImage, shareImage];
 
 const TILE_TINTS = [
   "bg-brand-yellow/15 text-fg",
   "bg-brand-green/15 text-fg",
   "bg-surface-2 text-fg",
-] as const;
-const PREVIEW_WASH = [
-  "from-brand-yellow/30 via-brand-amber/10",
-  "from-brand-green/30 via-brand-green-strong/10",
-  "from-brand-green/20 via-brand-yellow/10",
 ] as const;
 
 // Cards stick just below the fixed nav; each one 1.5rem lower than the last so
@@ -156,33 +160,17 @@ export function RideOptions() {
         </div>
 
         <div>
-          {/* A single preview keyed to the active option — the previous one
-              unmounts cleanly and the new one fades in, so two panels' text
-              never overlap mid-crossfade. */}
-          <div className="sticky top-28 h-[30rem]">
-            <div
+          {/* Just the illustration — no card, no text — swapping to the active
+              option. Keyed so the new image fades in cleanly (motion-safe)
+              rather than cross-fading over the old one. */}
+          <div className="sticky top-24 flex h-[34rem] items-center justify-center">
+            <Image
               key={active}
-              className={cn(
-                "relative flex h-full flex-col justify-end overflow-hidden rounded-[2rem] border border-line bg-linear-to-br to-transparent p-8 motion-safe:animate-preview-in",
-                PREVIEW_WASH[active],
-              )}
-            >
-              {/* Placeholder visual: a large glyph standing in for per-feature
-                  photography the project doesn't have. */}
-              <Icon
-                name={OPTIONS[active].icon}
-                className="absolute -right-8 -top-8 h-60 w-60 text-fg/[0.07]"
-              />
-              <p className="text-sm font-semibold text-link">
-                {OPTIONS[active].title}
-              </p>
-              <h3 className="mt-2 max-w-sm font-display text-3xl text-fg">
-                {OPTIONS[active].headline}
-              </h3>
-              <p className="mt-3 max-w-md text-fg-muted">
-                {OPTIONS[active].body}
-              </p>
-            </div>
+              src={IMAGES[active]}
+              alt=""
+              sizes="(min-width: 1024px) 30rem, 90vw"
+              className="h-auto w-full max-w-lg motion-safe:animate-preview-in"
+            />
           </div>
         </div>
       </div>
