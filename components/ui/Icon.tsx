@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 
-/**
- * Brand marks are drawn as solid glyphs (fill, evenodd cutouts for negative
- * space) instead of the stroke style used everywhere else, matching how real
- * wordmarks/logos are usually authored.
- */
+/** Brand marks are solid glyphs (fill + evenodd cutouts), not the stroke style used elsewhere. */
 const BRAND_ICONS = new Set([
   "instagram",
   "x",

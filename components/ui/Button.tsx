@@ -10,10 +10,7 @@ const VARIANTS: Record<Variant, string> = {
     "bg-brand-yellow text-ink hover:bg-brand-amber hover:text-ink shadow-sm",
   secondary:
     "bg-surface text-fg border border-line hover:border-brand-green",
-  // Inverts with the theme: --fg is dark in light mode and light in dark, --bg
-  // the reverse, so bg-fg/text-bg is always a near-black button with light
-  // text on the light page and a light button with dark text on the dark page
-  // — the Uber-style solid nav button, without a hardcoded colour.
+  // bg-fg/text-bg inverts with the theme — the Uber-style solid button without hardcoded colours.
   contrast: "bg-fg text-bg hover:bg-fg/90 shadow-sm",
 };
 
@@ -37,9 +34,7 @@ type AnchorButtonProps = ButtonOwnProps &
 type NativeButtonProps = ButtonOwnProps &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonOwnProps> & {
     href?: undefined;
-    // Anchor-only attributes, explicitly rejected so the weak-union-type hole
-    // (a prop "known" on one constituent is otherwise treated as known on
-    // all constituents) can't let them silently attach to a <button>.
+    // Anchor-only attrs rejected so the weak-union hole can't attach them to a <button>.
     target?: never;
     rel?: never;
     download?: never;
@@ -48,9 +43,7 @@ type NativeButtonProps = ButtonOwnProps &
     referrerPolicy?: never;
   };
 
-// Discriminated on `href`: pass it and you get honest anchor props
-// (target, rel, aria-label, onClick, ...); omit it and you get honest
-// button props (type, disabled, onClick, ...) — no `any` involved.
+// Discriminated on `href`: anchor props with it, button props without — no `any` involved.
 export type ButtonProps = AnchorButtonProps | NativeButtonProps;
 
 export function Button({
@@ -74,7 +67,8 @@ export function Button({
       keyof ButtonOwnProps | "href"
     >;
     return (
-      <a href={href} className={classes} {...anchorProps}>
+      // suppressHydrationWarning: extensions stamp attrs like fdprocessedid before hydration.
+      <a suppressHydrationWarning href={href} className={classes} {...anchorProps}>
         {children}
       </a>
     );
@@ -85,7 +79,7 @@ export function Button({
     keyof ButtonOwnProps | "href"
   >;
   return (
-    <button type={type} className={classes} {...buttonProps}>
+    <button suppressHydrationWarning type={type} className={classes} {...buttonProps}>
       {children}
     </button>
   );

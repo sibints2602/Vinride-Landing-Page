@@ -1,14 +1,14 @@
 import { SKIP_LINK_LABEL } from "@/content/site";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { Hero } from "@/components/sections/Hero";
 import { StatsStrip } from "@/components/sections/StatsStrip";
 import { RideOptions } from "@/components/sections/RideOptions";
 import { WhyVinride } from "@/components/sections/WhyVinride";
 import { HowItWorks } from "@/components/sections/HowItWorks";
-import { FareTable } from "@/components/sections/FareTable";
-import { DriveWithUs } from "@/components/sections/DriveWithUs";
-import { Safety } from "@/components/sections/Safety";
+import { CustomerStories } from "@/components/sections/CustomerStories";
+import { DriveSafety } from "@/components/sections/DriveSafety";
 import { AppDownload } from "@/components/sections/AppDownload";
 
 export default function HomePage() {
@@ -27,12 +27,12 @@ export default function HomePage() {
         <RideOptions />
         <WhyVinride />
         <HowItWorks />
-        <FareTable />
-        <DriveWithUs />
-        <Safety />
+        <CustomerStories />
+        <DriveSafety />
         <AppDownload />
       </main>
       <Footer />
+      <ScrollToTop />
     </>
   );
 }

@@ -18,9 +18,7 @@ export function MobileMenu() {
 
   const close = () => setOpen(false);
 
-  // Lock body scroll while the panel is open. The cleanup runs both on close
-  // and on unmount (React always runs effect cleanups on unmount), so scroll
-  // is restored even if the component disappears while the menu is open.
+  // Lock body scroll while open; cleanup restores it on close and on unmount.
   useEffect(() => {
     if (!open) return;
     const original = document.body.style.overflow;
@@ -89,6 +87,8 @@ export function MobileMenu() {
   return (
     <>
       <button
+        // Extension-stamped attributes (fdprocessedid) — see AutocompleteInput.
+        suppressHydrationWarning
         ref={triggerRef}
         type="button"
         className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-fg md:hidden"
@@ -100,20 +100,7 @@ export function MobileMenu() {
         <Icon name="menu" />
       </button>
 
-      {/*
-        Always mounted (rather than `{open && (...)}`) so the slide/fade can
-        animate on both open AND close — an unmounted node has nothing to
-        transition on exit. `inert` when closed removes the whole subtree
-        from the tab order and the accessibility tree at the platform level
-        (stronger than aria-hidden alone, and it can't be defeated by a
-        stray tabIndex), and `pointer-events-none` stops the full-viewport
-        wrapper from swallowing clicks meant for content behind it while
-        hidden. Visibility itself is driven by transform/opacity so the
-        transition can play; duration/easing come from token utility
-        classes only (no inline styles), so the reduced-motion override in
-        globals.css (which collapses `transition-duration` via `!important`)
-        still applies.
-      */}
+      {/* Always mounted so close can animate; inert + pointer-events-none make it harmless when hidden. */}
       <div
         className={cn(
           "fixed inset-0 z-50 md:hidden",
@@ -145,6 +132,7 @@ export function MobileMenu() {
         >
           <div className="flex items-center justify-end">
             <button
+              suppressHydrationWarning
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-fg-muted hover:text-fg"
               aria-label={MOBILE_MENU.closeMenuLabel}

@@ -13,25 +13,23 @@ export interface RevealProps {
   children?: ReactNode;
   delay?: number;
   className?: string;
+  /** rise = fade-up (default), mask = clip slide, draw = scale-x, pop = scale-in, deal = card deal. */
+  variant?: "rise" | "mask" | "draw" | "pop" | "deal";
 }
 
-/**
- * Single source of truth for the stagger step between sibling Reveal
- * delays, e.g. `delay={index * REVEAL_STAGGER_MS}` for a mapped list. Keeps
- * every staggered section (StatsStrip, WhyVinride, HowItWorks, Safety,
- * DriveWithUs) on the same rhythm instead of each picking its own number.
- */
-export const REVEAL_STAGGER_MS = 80;
+/** Shared stagger step for sibling Reveals; 160ms so items land one-by-one against the 700ms ease. */
+export const REVEAL_STAGGER_MS = 160;
 
-// useLayoutEffect warns when it runs during server rendering (it has no
-// effect there, since there's no browser paint to run "before"). Static
-// generation renders this "use client" component in Node, so window is
-// undefined at module-eval time and we fall back to useEffect there; in the
-// browser, window is defined and we get the real, pre-paint layout effect.
+// useLayoutEffect warns during SSR (static generation runs this in Node), so fall back to useEffect.
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-export function Reveal({ children, delay = 0, className }: RevealProps) {
+export function Reveal({
+  children,
+  delay = 0,
+  className,
+  variant = "rise",
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -43,11 +41,7 @@ export function Reveal({ children, delay = 0, className }: RevealProps) {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // A blank page is worse than a missing animation: skip straight to
-    // visible when we can't observe, or when the user doesn't want motion.
-    // This runs in a layout effect (synchronous, pre-paint) rather than a
-    // passive effect, so these users never see a painted frame of hidden
-    // content before it corrects.
+    // No observer or reduced motion: show immediately, pre-paint, so hidden content never flashes.
     if (!node || typeof IntersectionObserver === "undefined" || prefersReducedMotion) {
       setVisible(true);
       return;
@@ -68,6 +62,73 @@ export function Reveal({ children, delay = 0, className }: RevealProps) {
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+
+  if (variant === "deal") {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "transition-[transform,opacity] duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+          visible
+            ? "translate-x-0 rotate-0 opacity-100"
+            : "translate-x-28 rotate-6 opacity-0",
+          className,
+        )}
+        style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  if (variant === "draw") {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "origin-left transition-transform duration-[450ms] ease-out",
+          visible ? "scale-x-100" : "scale-x-0",
+          className,
+        )}
+        style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  if (variant === "pop") {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "transition-[transform,opacity] duration-500 ease-out",
+          visible ? "scale-100 opacity-100" : "scale-0 opacity-0",
+          className,
+        )}
+        style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  if (variant === "mask") {
+    return (
+      // The clip; pb/-mb give descenders room so they aren't sheared off once text settles.
+      <div ref={ref} className={cn("-mb-2 overflow-hidden pb-2", className)}>
+        <div
+          className={cn(
+            "transition-[transform,opacity] duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+            visible ? "translate-y-0 opacity-100" : "translate-y-[110%] opacity-0",
+          )}
+          style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

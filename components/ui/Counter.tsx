@@ -14,11 +14,7 @@ function formatValue(current: number, fractional: boolean): string {
   return fractional ? current.toFixed(1) : String(Math.round(current));
 }
 
-// useLayoutEffect warns when it runs during server rendering (it has no
-// effect there, since there's no browser paint to run "before"). Static
-// generation renders this "use client" component in Node, so window is
-// undefined at module-eval time and we fall back to useEffect there; in the
-// browser, window is defined and we get the real, pre-paint layout effect.
+// useLayoutEffect warns during SSR (static generation runs this in Node), so fall back to useEffect.
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
@@ -36,11 +32,7 @@ export function Counter({ value, suffix = "" }: CounterProps) {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // A "0" reading is worse than a missing count-up animation: jump
-    // straight to the final value when we can't observe, or when the user
-    // doesn't want motion. This runs in a layout effect (synchronous,
-    // pre-paint) rather than a passive effect, so these users never see a
-    // painted "0" frame before it corrects.
+    // No observer or reduced motion: jump to the final value pre-paint so no "0" frame flashes.
     if (!node || typeof IntersectionObserver === "undefined" || prefersReducedMotion) {
       setDisplay(formatValue(value, fractional));
       return;
@@ -77,9 +69,7 @@ export function Counter({ value, suffix = "" }: CounterProps) {
   }, [value, fractional]);
 
   return (
-    // Decorative: a rapidly changing count-up is noise to assistive tech
-    // even before considering the suffix. Callers must provide the real
-    // announcement as static text elsewhere (see StatsStrip).
+    // Decorative for assistive tech; callers provide the real announcement as static text.
     <span ref={ref} aria-hidden="true">
       {display}
       {suffix}

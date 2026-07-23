@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-/* Dark mode is attribute-driven, not media-query driven, so the ThemeToggle can
-   override the OS preference. Must match the attribute set by ThemeScript. */
+/* Attribute-driven dark mode so ThemeToggle can override the OS preference; must match ThemeScript. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ---- Brand constants: identical in both themes ---- */
@@ -9,10 +8,18 @@
   --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 
-  /* Fade+rise for the ride-options preview when the active card changes.
-     Applied via `motion-safe:animate-preview-in`, so reduced-motion users get
-     an instant swap. */
+  /* Fade+rise for the ride-options preview; motion-safe so reduced-motion gets an instant swap. */
   --animate-preview-in: preview-in 0.45s ease-out;
+
+  /* Navbar on-load descent — must stay `backwards`: `forwards` keeps a transform that traps MobileMenu. */
+  --animate-nav-in: nav-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  /* Live-location halo on the How-it-works pickup ring; motion-safe keeps it still under reduced motion. */
+  --animate-location-pulse: location-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Pure-CSS hero entrance (not JS Reveal): Reveal's opacity-0-until-hydration pushed LCP out by seconds. */
+  --animate-hero-rise: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-hero-mask: hero-mask 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 
   --color-brand-yellow: #f5b301;
   --color-brand-amber: #ef7d00;
@@ -31,15 +38,12 @@
   --fg: #14100b;
   --fg-muted: #6b6660;
   --line: #e5e2da;
-  /* Darkened brand green. #0FB894 is only 2.53:1 on white; this is 5.22:1 on
-     #ffffff and 4.99:1 on #fafaf8, clearing AA on both surfaces. */
+  /* Darkened brand green — #0FB894 is only 2.53:1 on white; this clears AA on both light surfaces. */
   --link: #087b63;
   --ring: #087b63;
-  /* #ef7d00 (brand amber) is only 2.76:1 on white and fails AA for error text.
-     This is 6.57:1 on #ffffff and 6.29:1 on #fafaf8, clearing AA on both surfaces. */
+  /* Brand amber fails AA for error text on white; this clears AA on both light surfaces. */
   --danger: #b42318;
-  /* Elevation. Tinted with the ink hue rather than pure black so lifted
-     surfaces read warm against the off-white canvas. */
+  /* Elevation, tinted with the ink hue so lifted surfaces read warm on the off-white canvas. */
   --lift: 0 10px 30px -12px rgb(20 16 11 / 0.16);
   --lift-lg: 0 30px 70px -28px rgb(20 16 11 / 0.28);
 }
@@ -55,8 +59,7 @@
   --ring: var(--color-brand-green-strong);
   /* 8.75:1 on #161e1b and 9.59:1 on #0e1412, clearing AA on both surfaces. */
   --danger: #fda29b;
-  /* A warm-tinted shadow is invisible on a near-black canvas; go opaque black
-     and deeper so elevation still reads. */
+  /* Warm-tinted shadows vanish on near-black; go opaque black and deeper so elevation still reads. */
   --lift: 0 10px 30px -12px rgb(0 0 0 / 0.6);
   --lift-lg: 0 30px 70px -28px rgb(0 0 0 / 0.75);
 }
@@ -77,9 +80,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* The floating nav pill is 4rem tall and sits 1rem below the viewport top,
-       so it occupies the first 5rem; the extra 1.5rem is breathing room so a
-       jumped-to heading isn't flush against it. */
+    /* Nav pill occupies the first 5rem; extra 1.5rem keeps jumped-to headings clear of it. */
     scroll-padding-top: 6.5rem;
     color-scheme: light;
   }
@@ -97,8 +98,7 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    /* Poppins is geometric and runs wide by default; display sizes need the
-       tracking pulled in to stop headlines looking loose. */
+    /* Poppins runs wide; pull tracking in so display headlines don't look loose. */
     letter-spacing: -0.02em;
   }
 
@@ -130,5 +130,50 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes nav-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-mask {
+  from {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes location-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
   }
 }

@@ -32,14 +32,7 @@ function normalise(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-/**
- * Derives a stable pseudo-distance from the two location strings.
- *
- * There is no map or geocoding service in this build, so distance is a
- * deterministic hash of the route rather than a real measurement. Deterministic
- * matters: a random value would make the same route quote differently on every
- * keystroke, which reads as broken.
- */
+/** No geocoding in this build: distance is a deterministic route hash so quotes stay stable. */
 function pseudoDistanceKm(pickup: string, drop: string): number {
   const route = `${normalise(pickup)}->${normalise(drop)}`;
   let hash = 2166136261;

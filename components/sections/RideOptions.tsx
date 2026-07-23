@@ -8,15 +8,13 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
-import carImage from "@/public/ride/Car driving-bro.png";
-import bikeImage from "@/public/ride/Order ride-bro.png";
-import shareImage from "@/public/ride/Order ride-pana.png";
+import carImage from "@/public/ride/Car.png";
+import bikeImage from "@/public/ride/bike.png";
+import shareImage from "@/public/ride/Car driving-bro.png";
 
 const OPTIONS = RIDE_OPTIONS.options;
 
-// One illustration per option, in the same order as RIDE_OPTIONS. Reorder here
-// to remap. (There is no bike-specific illustration, so Bike ride borrows the
-// "order a ride" scene.)
+// One illustration per option, in RIDE_OPTIONS order; reorder here to remap.
 const IMAGES = [carImage, bikeImage, shareImage];
 
 const TILE_TINTS = [
@@ -25,12 +23,14 @@ const TILE_TINTS = [
   "bg-surface-2 text-fg",
 ] as const;
 
-// Cards stick just below the fixed nav; each one 1.5rem lower than the last so
-// the pile shows a peeking edge. The active card is the lowest one that has
-// reached its sticky position, i.e. the last whose top has crossed this line.
-const STICKY_TOP_REM = 7;
+// Shared-release transform stacking (native sticky can't); STACK_TOP centers the deck on the preview.
+const STACK_TOP_REM = 12;
 const CARD_STEP_REM = 1.5;
-const ACTIVE_LINE_PX = (STICKY_TOP_REM + (OPTIONS.length - 1) * CARD_STEP_REM) * 16 + 24;
+// Buried cards shrink `RECEDE` per covering card, easing in over `RECEDE_RAMP_PX` of scroll.
+const RECEDE = 0.05;
+const RECEDE_RAMP_PX = 160;
+// Flow gap = dwell as the front card; no tail after the last so the deck releases on landing.
+const CARD_GAP = "46vh";
 
 /** The plain-list rendering, shared by mobile and the reduced-motion path. */
 function PlainList({ className }: { className?: string }) {
@@ -62,20 +62,54 @@ function PlainList({ className }: { className?: string }) {
 }
 
 export function RideOptions() {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const [active, setActive] = useState(0);
 
-  // Scrollspy: on each frame the scroll changes, find the last card whose top
-  // has crossed the active line and mark it current. rAF-throttled and it only
-  // ever sets a small integer, so there are no per-frame transforms to
-  // jitter — the stacking itself is pure CSS `position: sticky`.
+  // Shared-release pinning; geometry measured once (not per frame) to avoid device-pixel wobble.
   useEffect(() => {
+    const wrap = wrapRef.current;
+    const cards = cardRefs.current;
+    if (!wrap || cards.some((c) => !c)) return;
+
+    const rootFontPx =
+      parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const n = cards.length;
+    let pinStart: number[] = [];
+    let release = 0;
+    let enabled = false;
     let ticking = false;
+
+    const measure = () => {
+      // The plain list handles < lg; this column is display:none there.
+      enabled = window.innerWidth >= 1024;
+      if (!enabled) return;
+      const wrapTopAbs = wrap.getBoundingClientRect().top + window.scrollY;
+      const stackTop = STACK_TOP_REM * rootFontPx;
+      const step = CARD_STEP_REM * rootFontPx;
+      pinStart = cards.map(
+        (c, i) => wrapTopAbs + c!.offsetTop - (stackTop + i * step),
+      );
+      // The whole deck lets go the instant the last card lands — no frozen hold.
+      release = pinStart[n - 1];
+    };
+
     const update = () => {
       ticking = false;
+      if (!enabled) return;
+      const scrollY = window.scrollY;
       let next = 0;
-      cardRefs.current.forEach((el, i) => {
-        if (el && el.getBoundingClientRect().top <= ACTIVE_LINE_PX) next = i;
+      cards.forEach((card, i) => {
+        const el = card!;
+        const pinned = scrollY >= pinStart[i];
+        if (pinned) next = i;
+        const ty = pinned ? Math.min(scrollY, release) - pinStart[i] : 0;
+        // Recede once each later card has locked on top of this one.
+        let depth = 0;
+        for (let j = i + 1; j < n; j++) {
+          depth += Math.min(1, Math.max(0, (scrollY - pinStart[j]) / RECEDE_RAMP_PX));
+        }
+        el.style.transform = `translate3d(0, ${ty}px, 0) scale(${1 - depth * RECEDE})`;
       });
       setActive((prev) => (prev === next ? prev : next));
     };
@@ -85,30 +119,43 @@ export function RideOptions() {
         requestAnimationFrame(update);
       }
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const remeasure = () => {
+      measure();
+      update();
+    };
+
+    measure();
     update();
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", remeasure);
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(document.body);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", remeasure);
+      ro.disconnect();
+    };
   }, []);
 
   return (
     <section
       id="ride"
-      className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28"
+      // Bottom padding matches the stats-strip scale so the ride→why seam mirrors stats→ride.
+      className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8"
     >
       <SectionHeading
+        animate
         eyebrow={RIDE_OPTIONS.eyebrow}
         heading={RIDE_OPTIONS.heading}
         subheading={RIDE_OPTIONS.subheading}
       />
 
-      {/* Mobile / tablet: plain cards (the sticky two-column scrollytelling
-          needs desktop width). */}
+      {/* Mobile / tablet: plain cards (the scrollytelling needs desktop width). */}
       <PlainList className="lg:hidden" />
 
-      {/* Desktop: content cards stack up on the left (CSS sticky), a sticky
-          preview on the right swaps to whichever card is active. */}
+      {/* Desktop: cards translate-stack left; the sticky preview right swaps to the active card. */}
       <div className="mt-10 hidden lg:grid lg:grid-cols-2 lg:gap-12">
-        <div>
+        <div ref={wrapRef} className="relative">
           {OPTIONS.map((option, i) => {
             const isActive = i === active;
             return (
@@ -118,51 +165,55 @@ export function RideOptions() {
                   cardRefs.current[i] = el;
                 }}
                 style={{
-                  top: `${STICKY_TOP_REM + i * CARD_STEP_REM}rem`,
-                  marginBottom: i < OPTIONS.length - 1 ? "46vh" : undefined,
-                  // Cards already behind the active one recede a touch. Driven
-                  // by `active` (state), not the raw scroll, so it changes once
-                  // per step — never every frame.
-                  transform: i < active ? `scale(${1 - (active - i) * 0.04})` : undefined,
+                  // Transform set per scroll frame; no `will-change` — it kills the glass blur.
+                  marginBottom: i < OPTIONS.length - 1 ? CARD_GAP : undefined,
+                  zIndex: i,
                   transformOrigin: "top center",
                 }}
                 className={cn(
-                  "sticky rounded-[2rem] border bg-surface p-8 shadow-lift-lg transition-[transform,border-color] duration-300 ease-out",
-                  isActive ? "border-brand-yellow/40" : "border-line",
+                  "rounded-sm border p-8 shadow-lift-lg backdrop-blur-xl transition-[border-color] duration-300 ease-out",
+                  // Frosted glass; near-solid fallback where backdrop-filter is unsupported.
+                  "bg-surface/85 supports-[backdrop-filter]:bg-surface/60",
+                  "ring-1 ring-inset ring-white/15 dark:ring-white/5",
+                  isActive ? "border-brand-yellow/50" : "border-line/70",
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full",
-                      TILE_TINTS[i],
-                    )}
-                  >
-                    <Icon name={option.icon} className="h-5 w-5" />
-                  </span>
-                  <span className="text-sm font-semibold text-link">
-                    {option.title}
-                  </span>
-                </div>
-                <h3 className="mt-6 font-display text-2xl text-fg">
-                  {option.headline}
-                </h3>
-                <p className="mt-2 text-fg-muted">{option.body}</p>
-                <p className="mt-4 text-sm font-medium text-fg-muted">
-                  {option.meta}
-                </p>
+                {/* Inner content reveals piece by piece — same cadence as SectionHeading. */}
+                <Reveal>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-full",
+                        TILE_TINTS[i],
+                      )}
+                    >
+                      <Icon name={option.icon} className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm font-semibold text-link">
+                      {option.title}
+                    </span>
+                  </div>
+                </Reveal>
+                <Reveal variant="mask" delay={100}>
+                  <h3 className="mt-6 font-display text-2xl text-fg">
+                    {option.headline}
+                  </h3>
+                </Reveal>
+                <Reveal delay={220}>
+                  <p className="mt-2 text-fg-muted">{option.body}</p>
+                </Reveal>
+                <Reveal delay={340}>
+                  <p className="mt-4 text-sm font-medium text-fg-muted">
+                    {option.meta}
+                  </p>
+                </Reveal>
               </article>
             );
           })}
-          {/* Tail room so the last card, once stuck, stays the active one for a
-              scroll beat instead of the section ending the moment it pins. */}
-          <div aria-hidden="true" className="h-[44vh]" />
         </div>
 
         <div>
-          {/* Just the illustration — no card, no text — swapping to the active
-              option. Keyed so the new image fades in cleanly (motion-safe)
-              rather than cross-fading over the old one. */}
+          {/* Illustration only, keyed to the active option so the new image fades in cleanly. */}
           <div className="sticky top-24 flex h-[34rem] items-center justify-center">
             <Image
               key={active}

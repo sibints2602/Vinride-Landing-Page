@@ -1,23 +1,16 @@
+import Image from "next/image";
 import { APP_DOWNLOAD } from "@/content/site";
 import { Icon } from "@/components/ui/Icon";
-import { Reveal } from "@/components/ui/Reveal";
+import { Reveal, REVEAL_STAGGER_MS } from "@/components/ui/Reveal";
+import orderRideImage from "@/public/ride/Order ride-pana.png";
 
-/**
- * Maps each store's platform name to its brand glyph in Icon.tsx.
- */
+/** Maps each store's platform name to its brand glyph in Icon.tsx. */
 const STORE_ICON: Record<string, string> = {
   "Google Play": "google-play",
   "App Store": "apple",
 };
 
-/**
- * Vinride has no live App Store or Play Store listing yet, so this can never
- * be an <a> or <button> — a dead `href="#"` styled as a store button would
- * mislead riders into thinking the app already exists. It's a plain, inert
- * div: no tabindex (not focusable), aria-disabled to tell assistive tech it's
- * inactive, and a visible state label (content-sourced, e.g. "Coming soon")
- * so sighted users get the same signal.
- */
+/** No live store listing yet — deliberately an inert div (not a link/button) so it can't mislead. */
 function StoreBadge({ platform, state }: { platform: string; state: string }) {
   const iconName = STORE_ICON[platform] ?? "pin";
   const stateLabel = APP_DOWNLOAD.stateLabels[state] ?? APP_DOWNLOAD.unknownStateFallback;
@@ -25,7 +18,7 @@ function StoreBadge({ platform, state }: { platform: string; state: string }) {
   return (
     <div
       aria-disabled="true"
-      className="flex items-center gap-3 rounded-2xl border border-ink/20 bg-ink/5 px-4 py-3"
+      className="flex items-center gap-3 rounded-sm border border-ink/20 bg-ink/5 px-4 py-3"
     >
       <Icon name={iconName} className="h-7 w-7 text-ink" />
       <span className="flex flex-col leading-tight">
@@ -36,81 +29,51 @@ function StoreBadge({ platform, state }: { platform: string; state: string }) {
   );
 }
 
-/**
- * Abstract booking-screen phone mockup, built entirely from brand-gradient
- * and token fills — the project has no screenshots or photography. Purely
- * decorative (aria-hidden); the heading/subheading/badges beside it already
- * carry the section's meaning.
- */
-function PhoneMockup() {
-  return (
-    <svg
-      viewBox="0 0 300 420"
-      className="mx-auto h-auto w-full max-w-[260px]"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="10" y="10" width="280" height="400" rx="36" className="fill-ink" />
-      <rect x="130" y="26" width="40" height="6" rx="3" className="fill-surface" opacity="0.5" />
-      <rect x="22" y="40" width="256" height="346" rx="20" fill="var(--color-brand-forest)" />
-
-      <g stroke="var(--color-brand-green)" strokeOpacity="0.35" strokeWidth="1">
-        <line x1="22" y1="130" x2="278" y2="130" />
-        <line x1="22" y1="190" x2="278" y2="190" />
-        <line x1="94" y1="40" x2="94" y2="386" />
-        <line x1="194" y1="40" x2="194" y2="386" />
-      </g>
-
-      <path
-        d="M60 320 Q120 220 150 200 T230 100"
-        fill="none"
-        stroke="var(--color-brand-yellow)"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <circle cx="230" cy="100" r="9" fill="var(--color-brand-yellow)" />
-      <circle cx="60" cy="320" r="7" fill="var(--color-brand-green-strong)" />
-
-      <rect x="38" y="330" width="224" height="72" rx="14" className="fill-surface" opacity="0.96" />
-      <rect x="54" y="346" width="96" height="10" rx="5" className="fill-ink" opacity="0.75" />
-      <rect x="54" y="364" width="144" height="8" rx="4" className="fill-ink" opacity="0.35" />
-      <rect x="204" y="346" width="42" height="28" rx="14" fill="var(--color-brand-yellow)" />
-    </svg>
-  );
-}
-
-/**
- * Download banner. This is the highest-risk contrast spot on the page: the
- * fill is `bg-gradient-to-br from-brand-yellow to-brand-amber`, so every
- * text element must be `text-ink` (near-black) — measured against both
- * gradient endpoints (#F5B301 and #EF7D00) at >= 10.2:1 and >= 6.8:1
- * respectively, well past the 4.5:1 AA floor. White text here would fail. No
- * Card is used for the badges: Card's tones keep text-fg/text-link, which
- * are theme-dependent and not guaranteed to stay ink-safe on this fill.
- */
+/** Download banner on a yellow→amber gradient — all text must stay `text-ink` for AA contrast. */
 export function AppDownload() {
   return (
-    <section id="download" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
-      <Reveal>
-        <div className="grid items-center gap-12 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-yellow to-brand-amber p-8 sm:p-12 lg:grid-cols-2 lg:p-16">
-          <div className="flex flex-col items-start gap-6">
+    <section
+      id="download"
+      className="relative overflow-hidden bg-linear-to-br from-brand-yellow to-brand-amber"
+    >
+      {/* Soft light pooling in the top corner keeps the fill from reading flat; decorative only */}
+      <div
+        aria-hidden
+        className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/20 blur-3xl"
+      />
+
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-12 sm:px-6 sm:pt-14 lg:grid-cols-2 lg:px-8">
+        {/* Staggered entrance: heading → subheading → badges → illustration, same cadence as elsewhere */}
+        <div className="relative flex flex-col items-start gap-6 pb-12 sm:pb-14">
+          <Reveal variant="mask">
             <h2 className="font-display text-3xl text-ink sm:text-4xl lg:text-5xl">
               {APP_DOWNLOAD.heading}
             </h2>
+          </Reveal>
+          <Reveal delay={100}>
             <p className="max-w-md text-base text-ink sm:text-lg">
               {APP_DOWNLOAD.subheading}
             </p>
+          </Reveal>
 
-            <div className="flex flex-wrap gap-4">
-              {APP_DOWNLOAD.stores.map((store) => (
-                <StoreBadge key={store.platform} platform={store.platform} state={store.state} />
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-4">
+            {APP_DOWNLOAD.stores.map((store, index) => (
+              <Reveal key={store.platform} delay={220 + index * REVEAL_STAGGER_MS}>
+                <StoreBadge platform={store.platform} state={store.state} />
+              </Reveal>
+            ))}
           </div>
-
-          <PhoneMockup />
         </div>
-      </Reveal>
+
+        <Reveal delay={220 + APP_DOWNLOAD.stores.length * REVEAL_STAGGER_MS} className="self-end">
+          <Image
+            src={orderRideImage}
+            alt=""
+            sizes="(min-width: 1024px) 28rem, 80vw"
+            className="relative mx-auto w-full max-w-sm lg:max-w-md"
+          />
+        </Reveal>
+      </div>
     </section>
   );
 }

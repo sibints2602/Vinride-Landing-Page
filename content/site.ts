@@ -23,25 +23,22 @@ export interface Stat {
   /** Rendered after the animated number, e.g. "M+", "+", "★". */
   suffix: string;
   label: string;
-  /**
-   * Full, static sentence announced to assistive tech in place of the
-   * animated number + suffix + label, which are visual-only (aria-hidden).
-   * Must stand alone as a complete, accurate sentence — e.g. "4 million plus
-   * rides completed" rather than a fragment paired with visible text.
-   */
+  /** Standalone sentence for assistive tech; the animated number/suffix/label are aria-hidden. */
   srText: string;
 }
 
 export interface Feature {
   title: string;
   body: string;
-  /** Must match a key of the ICONS map in components/ui/Icon.tsx. */
+  /** Icon key resolved by the rendering section (ICONS map, or WhyVinride's FEATURE_ICONS). */
   icon: string;
 }
 
 export interface Step {
   title: string;
   body: string;
+  /** Small uppercase caption under the body — one concrete product fact. */
+  meta: string;
 }
 
 export interface NavLink {
@@ -67,13 +64,12 @@ export const DISCLAIMER =
 
 export const NAV_LINKS: NavLink[] = [
   { label: "Ride", href: "#ride" },
-  { label: "Fares", href: "#fares" },
+  { label: "Stories", href: "#stories" },
   { label: "Drive", href: "#drive" },
   { label: "Safety", href: "#safety" },
 ];
 
-/** Shared between Navbar's and MobileMenu's <nav> landmarks — both wrap the
- *  same NAV_LINKS, so both get the same accessible name. */
+/** Shared accessible name for Navbar's and MobileMenu's <nav> landmarks (same NAV_LINKS). */
 export const NAV_PRIMARY_LABEL = "Primary" as const;
 
 /** The page's skip-to-content link, in app/page.tsx. */
@@ -117,10 +113,7 @@ export const ESTIMATOR = {
     pickupRequired: "Add a pickup point.",
     dropRequired: "Add a drop location.",
     sameLocation: "Pickup and drop can't be the same place.",
-    /** Defensive fallback for estimateFare's own thrown errors — should be unreachable now
-     *  that both the submit handler AND the vehicle chips run the same pickup/drop/
-     *  sameLocation validation before ever calling estimateFare, but never let a raw
-     *  Error message reach the DOM. */
+    /** Defensive fallback for estimateFare's thrown errors — never let a raw Error reach the DOM. */
     generic: "Couldn't estimate that route. Try a different pickup or drop.",
   },
 } as const;
@@ -153,9 +146,7 @@ export const FARE_RATES: FareRate[] = [
   { vehicleId: "outstation", baseFare: 500, perKm: 14, perMinute: 1, minimumFare: 1499 },
 ];
 
-/** Visually hidden heading naming the stats strip section for screen-reader
- *  users, who otherwise land in an unnamed region between the hero and the
- *  ride categories grid. */
+/** Visually hidden heading naming the stats strip region for screen-reader users. */
 export const STATS_SECTION = {
   heading: "Vinride by the numbers",
 } as const;
@@ -218,10 +209,16 @@ export const WHY_VINRIDE = {
   eyebrow: "Why Vinride",
   heading: "Built to be the ride you can trust.",
   subheading: "No hidden charges, no guesswork, no waiting alone at midnight.",
+  // 4×2 grid — order matters: top row's hover wash rises from below, bottom row's falls from above.
   features: [
-    { title: "Upfront fares", body: "See the exact price before you confirm. What you're quoted is what you pay.", icon: "tag" },
-    { title: "Verified captains", body: "Every captain is ID-checked, background-screened and rated after each trip.", icon: "shield" },
+    { title: "Upfront fares", body: "See the exact price before you confirm. What you're quoted is what you pay.", icon: "receipt" },
+    { title: "Verified captains", body: "Every captain is ID-checked, background-screened and rated after each trip.", icon: "shield-check" },
+    { title: "Pickup in minutes", body: "Captains stay close by around the clock — most rides arrive in under five.", icon: "bolt" },
+    { title: "Pay your way", body: "UPI, cards, wallets or cash. Settle the fare however suits the moment.", icon: "wallet" },
+    { title: "Schedule ahead", body: "Book up to three days out and step out to a captain already waiting.", icon: "calendar" },
+    { title: "Lost & found, sorted", body: "Left something behind? One tap connects you to your captain's last trip.", icon: "search" },
     { title: "24/7 support", body: "Real humans on call, any hour, in your language.", icon: "headset" },
+    { title: "Rewards every ride", body: "Earn coins on each trip and burn them on your next fare.", icon: "gift" },
   ] satisfies Feature[],
 } as const;
 
@@ -229,66 +226,146 @@ export const HOW_IT_WORKS = {
   eyebrow: "How it works",
   heading: "Three taps and you're moving.",
   steps: [
-    { title: "Set your destination", body: "Enter where you're headed and pick the ride that fits." },
-    { title: "Get matched", body: "We find the nearest captain and show you the fare before you confirm." },
-    { title: "Ride and pay", body: "Track the trip live, then pay by card, wallet or cash." },
+    { title: "Set your destination", body: "Enter where you're headed and pick the ride that fits.", meta: "Bike · car · sharing" },
+    { title: "Get matched", body: "We find the nearest captain and show you the fare before you confirm.", meta: "Average wait under 5 min" },
+    { title: "Ride and pay", body: "Track the trip live, then pay by card, wallet or cash.", meta: "UPI · card · cash" },
   ] satisfies Step[],
 } as const;
 
-export const FARES_SECTION = {
-  eyebrow: "Fares",
-  heading: "Priced upfront. Every time.",
-  subheading: "No surge multipliers hidden in the fine print.",
-  columns: { vehicle: "Ride", base: "Base fare", perKm: "Per km", perMinute: "Per min", minimum: "Minimum" },
-  noSurgeNote: "No surge pricing during regular hours.",
+export interface Story {
+  /** Uppercase place tag on the card, e.g. "KOCHI". */
+  city: string;
+  name: string;
+  /** Portrait in /public/avatars — placeholder photos until real ones exist. */
+  avatar: string;
+  /** Role or relationship line under the name, e.g. "Daily commuter". */
+  role: string;
+  quote: string;
+}
+
+export const CUSTOMER_STORIES = {
+  heading: "Built alongside our riders",
+  subheading: "Every trip shapes what we build next.",
+  /** Rendered as a five-star row; supports halves (e.g. 4.5). */
+  rating: 4.5,
+  ratingSrText: "Rated 4.5 out of 5 by riders",
+  linkLabel: "View all customer stories",
+  linkHref: "#stories",
+  stories: [
+    {
+      city: "USA",
+      name: "James Micheal",
+      avatar: "/avatars/priya-nair.jpg",
+      role: "Product designer",
+      quote:
+        "Fares used to be a gamble at peak hours. With Vinride the price I see is the price I pay — my commute budget finally makes sense.",
+    },
+    {
+      city: "Singapore",
+      name: "David Alexander",
+      avatar: "/avatars/arjun-shetty.jpg",
+      role: "Marketing lead",
+      quote:
+        "I schedule a bike every morning at 8:40 and it has never missed. The captain is downstairs before my coffee is done.",
+    },
+    {
+      city: "London",
+      name: "Linda Elizabeth Richard",
+      avatar: "/avatars/sneha-iyer.jpg",
+      role: "Analyst",
+      quote:
+        "My parents follow my late-night rides home on the live link. Nobody stays up worrying anymore.",
+    },
+    {
+      city: "Scotland",
+      name: "Christopher Joseph",
+      avatar: "/avatars/rahul-verma.jpg",
+      role: "Architect",
+      quote:
+        "Ride sharing costs less than my fuel bill did, and I get an hour of reading back every single day.",
+    },
+  ] satisfies Story[],
 } as const;
 
+/** Deliberately money-free: invented earnings/commission figures read as guarantees. */
 export const DRIVE = {
   eyebrow: "Drive with Vinride",
-  heading: "Own your hours. Keep more of the fare.",
+  heading: "Your hours. Your city. Your call.",
   subheading:
-    "Join as a captain and drive when it suits you — mornings, evenings, weekends, your call.",
-  earningsValue: "₹32,000",
-  earningsLabel: "Average monthly earnings for full-time captains",
-  /**
-   * Must render next to earningsValue. The figure is a placeholder, and
-   * presenting invented income without a qualifier would read as a guarantee.
-   */
-  earningsQualifier:
-    "Illustrative figure. Actual earnings vary by city, hours driven and demand.",
-  benefits: [
-    "Weekly payouts, straight to your bank",
-    "Lower commission than the big platforms",
-    "Free insurance cover on every trip",
-    "Fuel and service partner discounts",
-  ],
+    "Join as a captain and drive when it suits you — no targets, no pressure.",
+  hero: {
+    title: "You decide when you're on the road.",
+    body: "Go online when it suits you, off when it doesn't. The city is always moving — catch it on your schedule.",
+    /** Rendered as toggle-style chips inside the hero cell. */
+    slots: ["Mornings", "Evenings", "Weekends"],
+  },
+  /** Icon keys resolve against TILE_ICONS in DriveWithUs, not the shared ICONS map. */
+  tiles: [
+    {
+      icon: "badge-check",
+      title: "Insurance on every trip",
+      body: "Free cover for you and your vehicle from the moment a ride starts.",
+    },
+    {
+      icon: "phone-call",
+      title: "24/7 captain support",
+      body: "Real people on the line, day and night.",
+    },
+  ] satisfies Feature[],
+  steps: {
+    title: "How to join",
+    items: ["Sign up in the app", "Verify your documents", "Start driving"],
+  },
+  perks: {
+    title: "Fuel & service partner discounts",
+    body: "Save at partner pumps and garages across town.",
+  },
   cta: { label: "Become a captain", href: "#download" },
+} as const;
+
+/** Combined Drive/Safety tabbed section — tab ids double as navbar anchors (#drive, #safety). */
+export const DRIVE_SAFETY_TABS = {
+  ariaLabel: "Drive and safety",
+  tabs: [
+    { id: "drive", label: "Drive" },
+    { id: "safety", label: "Safety" },
+  ],
 } as const;
 
 export const SAFETY = {
   eyebrow: "Safety",
   heading: "Every ride, watched over.",
   subheading: "Safety isn't a feature we bolt on. It's how the trip is built.",
-  features: [
-    { title: "One-tap SOS", body: "Reach emergency services and our safety desk from inside the trip screen.", icon: "siren" },
-    { title: "Share your trip", body: "Send a live link so people you trust can follow you the whole way.", icon: "share" },
-    { title: "ID-verified captains", body: "Documents and background checks re-verified every year.", icon: "badge" },
-    { title: "Insurance cover", body: "Every trip is covered, for both rider and captain.", icon: "umbrella" },
+  /** Icon keys resolve against the animated-icon maps in Safety.tsx, not the shared ICONS map. */
+  hero: {
+    icon: "bell-ring",
+    title: "One-tap SOS",
+    body: "Reach emergency services and our safety desk from inside the trip screen.",
+    /** Mock of the in-app emergency button — decorative, not a control. */
+    pill: "SOS",
+    /** Rendered as chips — everyone a single tap can raise. */
+    reaches: ["Emergency services", "Safety desk", "Trusted contacts"],
+  },
+  tiles: [
+    { title: "Share your trip", body: "Send a live link so people you trust can follow you the whole way.", icon: "send" },
+    { title: "ID-verified captains", body: "Documents and background checks re-verified every year.", icon: "fingerprint" },
   ] satisfies Feature[],
+  wide: {
+    icon: "circle-check",
+    title: "Insurance cover",
+    body: "Every trip is covered, for both rider and captain.",
+    badges: ["Rider covered", "Captain covered"],
+  },
 } as const;
 
 export const APP_DOWNLOAD = {
   heading: "Get moving with Vinride.",
   subheading: "The app is on its way. Be first in line when we launch.",
-  /** Display text for each store's lifecycle state, keyed by the `state`
-   *  literal used in `stores` below. Every state that appears there must
-   *  have a matching key here. */
+  /** Display text per store lifecycle state — every `state` used in `stores` needs a key here. */
   stateLabels: {
     "coming-soon": "Coming soon",
   } as Record<string, string>,
-  /** Shown in place of a raw state slug if a store's `state` is ever missing
-   *  from stateLabels above — an unknown state must fail safe rather than
-   *  render an internal identifier as marketing copy. */
+  /** Fail-safe shown when a store's `state` is missing from stateLabels — never render a raw slug. */
   unknownStateFallback: "Status unavailable",
   /** Both stores are pre-launch. Rendered as disabled "Coming soon" badges — never as links. */
   stores: [
@@ -298,8 +375,7 @@ export const APP_DOWNLOAD = {
 } as const;
 
 export const CITIES: string[] = [
-  "Bengaluru", "Hyderabad", "Chennai", "Pune", "Kochi", "Coimbatore",
-  "Mysuru", "Vizag", "Madurai", "Mangaluru", "Trichy", "Vijayawada",
+  "USA", "London", "Scotland", "Spain", "Singapore", "Canada", "Australia",
 ];
 
 export const FOOTER_COLUMNS: FooterColumn[] = [
@@ -342,23 +418,14 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 ];
 
 export const FOOTER = {
-  /** Visually hidden. Gives the footer's own <h3> columns (Company, Ride,
-   *  Captains, Legal, Cities we serve) a proper <h2> ancestor of their own,
-   *  instead of nesting under the last visible <h2> before the footer. */
+  /** Visually hidden <h2> so the footer's <h3> columns don't nest under the last visible <h2>. */
   heading: "Footer",
-  blurb: "Ride-hailing built on upfront fares and captains you can trust.",
   socials: [
     { label: "Instagram", href: "#", icon: "instagram" },
     { label: "X", href: "#", icon: "x" },
     { label: "LinkedIn", href: "#", icon: "linkedin" },
   ],
   citiesHeading: "Cities we serve",
-  /**
-   * Evaluated at module scope, so on a statically prerendered page the year is
-   * baked in at BUILD time, not request time. A deploy that sits untouched
-   * across a new year will show a stale year until the next rebuild. Accepted
-   * deliberately: making the footer a Client Component just to compute a year
-   * costs more than it saves. Rebuild on deploy, or at minimum each January.
-   */
+  /** Year is baked in at build time (accepted tradeoff) — rebuild each January at minimum. */
   copyright: `© ${new Date().getFullYear()} Vinride. All rights reserved.`,
 } as const;

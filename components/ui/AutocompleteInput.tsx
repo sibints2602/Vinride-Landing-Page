@@ -23,14 +23,7 @@ interface AutocompleteInputProps {
   maxItems?: number;
 }
 
-/**
- * A text field with a styled suggestion list, replacing the native <datalist>
- * (whose popup can't be themed and renders as an OS-default menu). Implements
- * the ARIA combobox-with-listbox pattern: role=combobox + aria-expanded /
- * aria-controls / aria-autocomplete on the input, a listbox of options, and
- * aria-activedescendant tracking the highlighted row. Free typing is still
- * allowed — the list only suggests.
- */
+/** Themed <datalist> replacement using the ARIA combobox pattern; free typing still allowed. */
 export function AutocompleteInput({
   id,
   value,
@@ -107,6 +100,8 @@ export function AutocompleteInput({
   return (
     <div ref={rootRef} className="relative">
       <input
+        // Extensions stamp attrs like fdprocessedid pre-hydration; suppress mismatch noise here only.
+        suppressHydrationWarning
         id={id}
         type="text"
         role="combobox"

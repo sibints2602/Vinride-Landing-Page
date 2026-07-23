@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { ThemeScript } from "@/components/layout/ThemeScript";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import "./globals.css";
 
-// Poppins is NOT a variable font, so `weight` is required and each cut listed
-// here is downloaded separately. Keep this list to the weights actually used
-// (400 body, 500 font-medium, 600 font-semibold, 700 display) — every extra
-// entry is another font file on the critical path.
+// Poppins is not a variable font — each weight is a separate download, so list only weights in use.
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
@@ -26,9 +24,7 @@ export const metadata: Metadata = {
   },
 };
 
-// These two values duplicate --bg (light) and --bg (dark) from app/globals.css.
-// <meta name="theme-color"> cannot read a CSS custom property, so they must be
-// literals. If the --bg tokens change, update these in the same commit.
+// Literals duplicating --bg from globals.css (theme-color can't read CSS vars) — keep in sync.
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafaf8" },
@@ -50,7 +46,9 @@ export default function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }

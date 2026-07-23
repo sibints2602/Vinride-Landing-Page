@@ -24,13 +24,7 @@ interface SelectMenuProps {
   className?: string;
 }
 
-/**
- * A styled, accessible replacement for a native <select>: the browser's own
- * option popup can't be themed cross-platform, so this renders a listbox we
- * control. Implements the ARIA listbox pattern — button with
- * aria-haspopup/expanded, a focusable listbox with aria-activedescendant, full
- * keyboard support (Up/Down/Home/End/Enter/Esc), and click-outside to close.
- */
+/** Themed <select> replacement implementing the ARIA listbox pattern with full keyboard support. */
 export function SelectMenu({
   id,
   value,
@@ -120,6 +114,8 @@ export function SelectMenu({
   return (
     <div ref={rootRef} className="relative">
       <button
+        // Extension-stamped attributes (fdprocessedid) — see AutocompleteInput.
+        suppressHydrationWarning
         id={id}
         ref={btnRef}
         type="button"
@@ -155,8 +151,7 @@ export function SelectMenu({
               aria-selected={option.value === value}
               onMouseEnter={() => setActive(i)}
               onMouseDown={(event) => {
-                // Keep focus off the <li> so the list doesn't blur before the
-                // click resolves.
+                // Keep focus off the <li> so the list doesn't blur before the click resolves.
                 event.preventDefault();
                 choose(i);
               }}
