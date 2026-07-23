@@ -10,7 +10,18 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 pb-6 pt-12 sm:px-6 sm:pt-14 lg:px-8">
         <h2 className="sr-only">{FOOTER.heading}</h2>
         {/* Per-line reveals offset per column so the grid cascades down-and-across. */}
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+          {/* Mobile: the stacked columns leave the right rail empty, so the wordmark
+              runs vertically down it instead of bleeding off the page bottom. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 flex select-none items-center overflow-hidden sm:hidden"
+          >
+            <p className="whitespace-nowrap font-display text-[52vw] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_var(--color-line)] [writing-mode:vertical-rl]">
+              <LetterMark text={BRAND.name.toLowerCase()} step={250} tailFade={1} />
+            </p>
+          </div>
+
           <div className="flex flex-col gap-4">
             <Reveal>
               <div className="flex items-center gap-2.5">
@@ -92,8 +103,9 @@ export function Footer() {
         </Reveal>
       </div>
 
-      {/* Decorative giant outline wordmark bleeding off the page bottom; full-bleed on purpose. */}
-      <div aria-hidden className="pointer-events-none h-[14vw] select-none overflow-hidden">
+      {/* Decorative giant outline wordmark bleeding off the page bottom; full-bleed on purpose.
+          Hidden on mobile, where the vertical right-rail copy above replaces it. */}
+      <div aria-hidden className="pointer-events-none hidden h-[14vw] select-none overflow-hidden sm:block">
         {/* Negative top margin swallows the line box's ascent so letter tops hug the copyright row. */}
         <p className="-mt-[3.5vw] whitespace-nowrap text-center font-display text-[24vw] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_var(--color-line)]">
           {/* tailFade 1 = uniform stroke, no dissolving tail; 250ms step so letters land one by one. */}

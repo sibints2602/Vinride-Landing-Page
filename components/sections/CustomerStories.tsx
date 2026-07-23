@@ -1,16 +1,32 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { IconStarFilled, IconStarHalfFilled } from "@tabler/icons-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconStarFilled,
+  IconStarHalfFilled,
+} from "@tabler/icons-react";
 import { CUSTOMER_STORIES } from "@/content/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
 
-/** Hand-placed feel: each card leans a touch and drifts off the row's baseline, kept subtle. */
+/** Hand-placed feel (sm+ only): each card leans a touch and drifts off the row's baseline, kept subtle. */
 const CARD_TILTS = [
-  "rotate-[4.0deg] -translate-y-4",
-  "-rotate-[1.0deg] translate-y-1",
-  "rotate-[1.1deg] -translate-y-2",
-  "-rotate-[1.3deg] translate-y-2",
+  "sm:rotate-[4.0deg] sm:-translate-y-4",
+  "sm:-rotate-[1.0deg] sm:translate-y-1",
+  "sm:rotate-[1.1deg] sm:-translate-y-2",
+  "sm:-rotate-[1.3deg] sm:translate-y-2",
+] as const;
+
+/** Deal stagger, sm+ only — the mobile carousel deals each card as it's swiped into view. */
+const CARD_DEAL_DELAYS = [
+  "",
+  "sm:[transition-delay:300ms]",
+  "sm:[transition-delay:600ms]",
+  "sm:[transition-delay:900ms]",
 ] as const;
 
 function StarRow({ rating, srText }: { rating: number; srText: string }) {
@@ -32,6 +48,51 @@ function StarRow({ rating, srText }: { rating: number; srText: string }) {
 }
 
 export function CustomerStories() {
+  const trackRef = useRef<HTMLUListElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  // Track scroll edges so the arrows can dim when there's nothing left to reveal.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const update = () => {
+      setAtStart(track.scrollLeft <= 4);
+      setAtEnd(track.scrollLeft >= track.scrollWidth - track.clientWidth - 4);
+    };
+    update();
+    track.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      track.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  const scrollByCard = (direction: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const cards = Array.from(track.children) as HTMLElement[];
+    if (!cards.length) return;
+    const trackLeft = track.getBoundingClientRect().left;
+    // Each card's target scrollLeft, aligned to the px-4 (16px) scroll padding.
+    // Scrolling to explicit card offsets (vs. scrollBy a fixed step) matters at the
+    // ends, where the container rests off the snap grid and a fixed step re-snaps back.
+    const offsets = cards.map(
+      (card) =>
+        card.getBoundingClientRect().left - trackLeft + track.scrollLeft - 16,
+    );
+    const current = offsets.reduce(
+      (best, offset, i) =>
+        Math.abs(offset - track.scrollLeft) < Math.abs(offsets[best] - track.scrollLeft)
+          ? i
+          : best,
+      0,
+    );
+    const next = Math.min(Math.max(current + direction, 0), cards.length - 1);
+    track.scrollTo({ left: offsets[next], behavior: "smooth" });
+  };
+
   return (
     <section
       id="stories"
@@ -52,13 +113,48 @@ export function CustomerStories() {
         </Reveal>
       </div>
 
-      {/* Clip wrapper hides the fly-in path; -mx/px slack keeps tilted corners from being shaved */}
-      <div className="-mx-4 overflow-x-clip px-4">
-        <ul className="mt-14 grid list-none gap-5 py-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Mobile-only carousel controls, tucked into the section's top-right corner */}
+      <div className="mt-8 flex justify-end gap-2 sm:hidden">
+        <button
+          type="button"
+          aria-label="Previous story"
+          onClick={() => scrollByCard(-1)}
+          disabled={atStart}
+          // Form-filler extensions stamp fdprocessedid on buttons pre-hydration
+          suppressHydrationWarning
+          className="flex h-9 w-9 items-center justify-center border border-line text-fg-muted transition-colors duration-200 hover:border-brand-yellow/50 hover:text-fg disabled:opacity-30"
+        >
+          <IconChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          aria-label="Next story"
+          onClick={() => scrollByCard(1)}
+          disabled={atEnd}
+          suppressHydrationWarning
+          className="flex h-9 w-9 items-center justify-center border border-line text-fg-muted transition-colors duration-200 hover:border-brand-yellow/50 hover:text-fg disabled:opacity-30"
+        >
+          <IconChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* sm+: clip wrapper hides the fly-in path; -mx/px slack keeps tilted corners from being shaved.
+          Mobile: the ul is its own snap carousel and clips itself, so the wrapper stays inert. */}
+      <div className="sm:-mx-4 sm:overflow-x-clip sm:px-4">
+        <ul ref={trackRef} className="-mx-4 mt-4 flex sm:mt-14 snap-x snap-mandatory list-none gap-5 overflow-x-auto scroll-px-4 px-4 py-4 scrollbar-none sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:scroll-px-0 sm:px-0 lg:grid-cols-4">
           {CUSTOMER_STORIES.stories.map((story, index) => (
-            <li key={story.name} className={cn(CARD_TILTS[index % 4])}>
-              {/* Dealt one by one; the long stagger keeps the deals clearly sequential */}
-              <Reveal variant="deal" delay={index * 300} className="h-full">
+            <li
+              key={story.name}
+              className={cn(
+                "w-[85%] max-w-sm shrink-0 snap-start sm:w-auto sm:max-w-none",
+                CARD_TILTS[index % 4],
+              )}
+            >
+              {/* Dealt one by one on sm+; the long stagger keeps the deals clearly sequential */}
+              <Reveal
+                variant="deal"
+                className={cn("h-full", CARD_DEAL_DELAYS[index % 4])}
+              >
               <figure className="flex h-full flex-col border border-line bg-surface/40 p-6 transition-colors duration-300 hover:border-brand-yellow/50">
                 <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-fg-muted">
                   {story.city}
