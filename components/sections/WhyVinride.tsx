@@ -57,7 +57,7 @@ export function WhyVinride() {
           subheading={WHY_VINRIDE.subheading}
         />
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 lg:grid-cols-4">
           {WHY_VINRIDE.features.map((feature, index) => (
             // Frame shows from the start; baseDelay populates each cell's content after the heading.
             <Feature
@@ -113,13 +113,13 @@ function Feature({
       />
       <Reveal
         delay={baseDelay}
-        className="relative z-10 mb-4 px-10 text-fg-muted"
+        className="relative z-10 mb-4 px-5 text-fg-muted sm:px-10"
       >
         <CellIcon />
       </Reveal>
       <Reveal
         delay={baseDelay + CONTENT_STEP_MS}
-        className="relative z-10 mb-2 px-10"
+        className="relative z-10 mb-2 px-5 sm:px-10"
       >
         {/* Accent tick: neutral at rest, stretches and takes brand color as the title nudges right. */}
         <div className="absolute inset-y-0 left-0 h-6 w-1 origin-center rounded-br-full rounded-tr-full bg-line transition-all duration-200 group-hover/feature:h-8 group-hover/feature:bg-brand-yellow" />
@@ -128,7 +128,7 @@ function Feature({
         </h3>
       </Reveal>
       <Reveal delay={baseDelay + 2 * CONTENT_STEP_MS} className="relative z-10">
-        <p className="max-w-xs px-10 text-sm text-fg-muted">{body}</p>
+        <p className="max-w-xs px-5 text-sm text-fg-muted sm:px-10">{body}</p>
       </Reveal>
     </div>
   );

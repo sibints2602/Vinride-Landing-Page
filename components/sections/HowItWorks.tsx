@@ -26,8 +26,10 @@ export function HowItWorks() {
     >
       <SectionHeading
         animate
+        align="center"
         eyebrow={HOW_IT_WORKS.eyebrow}
         heading={HOW_IT_WORKS.heading}
+        className="md:items-start md:text-left"
       />
 
       {/* A real <ol> so the sequence reaches assistive tech as an ordered list. */}
@@ -37,7 +39,10 @@ export function HowItWorks() {
           const isLast = index === steps.length - 1;
 
           return (
-            <li key={step.title} className="group/step relative">
+            <li
+              key={step.title}
+              className="group/step relative text-center md:text-left"
+            >
               {/* Route rail (md+, decorative): stop marker + segment spanning column width + grid gap. */}
               <div aria-hidden="true" className="relative mb-8 hidden h-2.5 md:block">
                 {/* No static underlay: the rail exists only by being drawn, never pre-completed. */}
@@ -87,7 +92,9 @@ export function HowItWorks() {
                 </h3>
               </Reveal>
               <Reveal delay={base + 2 * CONTENT_STEP_MS}>
-                <p className="mt-2 max-w-xs text-fg-muted">{step.body}</p>
+                <p className="mt-2 max-w-xs mx-auto text-fg-muted md:mx-0">
+                  {step.body}
+                </p>
               </Reveal>
               <Reveal delay={base + 3 * CONTENT_STEP_MS}>
                 <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-fg-muted">
