@@ -18,10 +18,10 @@ describe("estimateFare", () => {
     expect(a).toEqual(b);
   });
 
-  it("produces a plausible distance between 2 and 30 km", () => {
-    const { distanceKm } = estimateFare("auto", "Old Town", "Riverside Mall");
-    expect(distanceKm).toBeGreaterThanOrEqual(2);
-    expect(distanceKm).toBeLessThanOrEqual(30);
+  it("produces a plausible distance between 1 and 18 miles", () => {
+    const { distanceMiles } = estimateFare("auto", "Old Town", "Riverside Mall");
+    expect(distanceMiles).toBeGreaterThanOrEqual(1);
+    expect(distanceMiles).toBeLessThanOrEqual(18);
   });
 
   it("returns a low bound below the high bound", () => {
@@ -31,7 +31,7 @@ describe("estimateFare", () => {
 
   it("never quotes below the vehicle's minimum fare", () => {
     const { low } = estimateFare("bike", "A", "B");
-    expect(low).toBeGreaterThanOrEqual(29);
+    expect(low).toBeGreaterThanOrEqual(4);
   });
 
   it("prices an SUV above a bike for the same route", () => {
@@ -40,7 +40,7 @@ describe("estimateFare", () => {
     expect(suv.low).toBeGreaterThan(bike.low);
   });
 
-  it("returns whole-rupee values", () => {
+  it("returns whole-dollar values", () => {
     const { low, high } = estimateFare("sedan", "Old Town", "Tech Park");
     expect(Number.isInteger(low)).toBe(true);
     expect(Number.isInteger(high)).toBe(true);

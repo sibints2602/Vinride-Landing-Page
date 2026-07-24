@@ -1,15 +1,24 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import {
   BRAND,
   DISCLAIMER,
   ESTIMATOR,
-  LOCALITIES,
   VEHICLE_TYPES,
   type VehicleTypeId,
 } from "@/content/site";
-import { estimateFare, type FareEstimate } from "@/lib/fare";
+import {
+  estimateFare,
+  fareForRoute,
+  type FareEstimate,
+} from "@/lib/fare";
+import {
+  MIN_QUERY_LENGTH,
+  routeBetween,
+  searchPlaces,
+  type Place,
+} from "@/lib/geo";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/ui/Icon";
@@ -23,9 +32,60 @@ interface EstimatorError {
   message: string;
 }
 
-/** Mirrors normalise() in lib/fare.ts (not exported there) so both same-location checks agree. */
 function normaliseForComparison(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * One address field: the typed text, the chosen Place (if any), live suggestions and a loading flag.
+ * Selecting a suggestion pins `place`; typing again clears it so the next submit re-resolves.
+ */
+function usePlaceField() {
+  const [text, setText] = useState("");
+  const [place, setPlace] = useState<Place | null>(null);
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const q = text.trim();
+    // A pinned place, or too-short input, means nothing to search.
+    if (place || q.length < MIN_QUERY_LENGTH) {
+      setSuggestions([]);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setLoading(true);
+    // Debounce so we hit Photon per pause, not per keystroke (also respects its rate limits).
+    const timer = setTimeout(() => {
+      searchPlaces(q, controller.signal)
+        .then((results) => setSuggestions(results))
+        .catch(() => setSuggestions([])) // network/abort → just show nothing
+        .finally(() => setLoading(false));
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [text, place]);
+
+  return {
+    text,
+    place,
+    suggestions,
+    loading,
+    type: (value: string) => {
+      setPlace(null);
+      setText(value);
+    },
+    select: (chosen: Place) => {
+      setPlace(chosen);
+      setText(chosen.label);
+      setSuggestions([]);
+    },
+  };
 }
 
 export function FareEstimator() {
@@ -35,19 +95,29 @@ export function FareEstimator() {
   const vehicleSelectId = `${uid}-vehicle`;
   const errorId = `${uid}-error`;
 
-  const [pickup, setPickup] = useState("");
-  const [drop, setDrop] = useState("");
+  const pickup = usePlaceField();
+  const drop = usePlaceField();
   const [vehicleId, setVehicleId] = useState<VehicleTypeId>("sedan");
   const [result, setResult] = useState<FareEstimate | null>(null);
   const [error, setError] = useState<EstimatorError | null>(null);
-  // True once submitted; kept separate from `result`, which clearing an input nulls.
+  const [computing, setComputing] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
 
-  /** Runs the pre-validated route through estimateFare; defensive catch keeps raw errors out of the DOM. */
-  function computeEstimate(vehicle: VehicleTypeId, from: string, to: string) {
+  /** Resolve a field to coordinates: use the pinned pick, else geocode the raw text and take the top hit. */
+  async function resolvePlace(field: typeof pickup): Promise<Place | null> {
+    if (field.place) return field.place;
     try {
-      const estimate = estimateFare(vehicle, from, to);
-      setResult(estimate);
+      const [top] = await searchPlaces(field.text);
+      return top ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Last resort when routing/geocoding is unavailable: the deterministic text-hash estimate. */
+  function computeFallback(vehicle: VehicleTypeId, from: string, to: string) {
+    try {
+      setResult(estimateFare(vehicle, from, to));
       setError(null);
     } catch {
       setResult(null);
@@ -55,54 +125,62 @@ export function FareEstimator() {
     }
   }
 
-  /** Shared by submit and ride-type select: validates first so field-specific messages beat the generic one. */
-  function validateAndCompute(vehicle: VehicleTypeId, from: string, to: string) {
-    const trimmedPickup = from.trim();
-    const trimmedDrop = to.trim();
+  /** Validate, then price a real OSRM route (falling back to the text estimate on any failure). */
+  async function run(vehicle: VehicleTypeId) {
+    const pickupText = pickup.text.trim();
+    const dropText = drop.text.trim();
 
-    if (!trimmedPickup) {
+    if (!pickupText) {
       setResult(null);
       setError({ field: "pickup", message: ESTIMATOR.errors.pickupRequired });
       return;
     }
-    if (!trimmedDrop) {
+    if (!dropText) {
       setResult(null);
       setError({ field: "drop", message: ESTIMATOR.errors.dropRequired });
       return;
     }
-    if (normaliseForComparison(trimmedPickup) === normaliseForComparison(trimmedDrop)) {
+    if (normaliseForComparison(pickupText) === normaliseForComparison(dropText)) {
       setResult(null);
       setError({ field: "both", message: ESTIMATOR.errors.sameLocation });
       return;
     }
 
-    computeEstimate(vehicle, from, to);
+    setError(null);
+    setResult(null);
+    setComputing(true);
+    try {
+      const [from, to] = await Promise.all([
+        resolvePlace(pickup),
+        resolvePlace(drop),
+      ]);
+
+      if (from && to) {
+        const route = await routeBetween(from, to);
+        setResult(fareForRoute(vehicle, route.distanceMiles, route.durationMinutes));
+      } else {
+        // Couldn't geocode one/both addresses — still give a stable estimate.
+        computeFallback(vehicle, pickupText, dropText);
+      }
+    } catch {
+      computeFallback(vehicle, pickupText, dropText);
+    } finally {
+      setComputing(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setHasAttempted(true);
-    validateAndCompute(vehicleId, pickup, drop);
+    void run(vehicleId);
   }
 
   function handleVehicleChange(id: VehicleTypeId) {
     setVehicleId(id);
-    // After a first attempt, re-validate/recompute so a ride-type change never leaves a stale quote.
+    // After a first attempt, re-price so a ride-type change never leaves a stale quote.
     if (hasAttempted) {
-      validateAndCompute(id, pickup, drop);
+      void run(id);
     }
-  }
-
-  function handlePickupChange(value: string) {
-    setPickup(value);
-    // Clear the result: it was computed from the old pickup value.
-    setResult(null);
-  }
-
-  function handleDropChange(value: string) {
-    setDrop(value);
-    // Same as handlePickupChange: never leave a stale fare band under changed inputs.
-    setResult(null);
   }
 
   const pickupInvalid = error?.field === "pickup" || error?.field === "both";
@@ -133,9 +211,17 @@ export function FareEstimator() {
               </label>
               <AutocompleteInput
                 id={pickupInputId}
-                value={pickup}
-                onChange={handlePickupChange}
-                options={LOCALITIES}
+                value={pickup.text}
+                onChange={(v) => {
+                  pickup.type(v);
+                  setResult(null);
+                }}
+                suggestions={pickup.suggestions}
+                onSelect={(p) => {
+                  pickup.select(p);
+                  setResult(null);
+                }}
+                loading={pickup.loading}
                 placeholder={ESTIMATOR.pickupPlaceholder}
                 ariaInvalid={pickupInvalid}
                 ariaDescribedBy={pickupInvalid ? errorId : undefined}
@@ -151,9 +237,17 @@ export function FareEstimator() {
               </label>
               <AutocompleteInput
                 id={dropInputId}
-                value={drop}
-                onChange={handleDropChange}
-                options={LOCALITIES}
+                value={drop.text}
+                onChange={(v) => {
+                  drop.type(v);
+                  setResult(null);
+                }}
+                suggestions={drop.suggestions}
+                onSelect={(p) => {
+                  drop.select(p);
+                  setResult(null);
+                }}
+                loading={drop.loading}
                 placeholder={ESTIMATOR.dropPlaceholder}
                 ariaInvalid={dropInvalid}
                 ariaDescribedBy={dropInvalid ? errorId : undefined}
@@ -184,10 +278,17 @@ export function FareEstimator() {
               // Extension-stamped attributes (fdprocessedid) — see AutocompleteInput.
               suppressHydrationWarning
               type="submit"
-              className="mt-1.5 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber lg:ml-1 lg:mt-0 lg:h-10 lg:w-10"
+              disabled={computing}
+              aria-busy={computing}
+              className="mt-1.5 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow text-sm font-medium text-ink transition-colors duration-200 hover:bg-brand-amber disabled:opacity-70 lg:ml-1 lg:mt-0 lg:h-10 lg:w-10"
             >
-              <Icon name="search" className="h-[18px] w-[18px]" />
-              <span className="lg:sr-only">{ESTIMATOR.submitLabel}</span>
+              <Icon
+                name="search"
+                className={cn("h-[18px] w-[18px]", computing && "motion-safe:animate-spin")}
+              />
+              <span className="lg:sr-only">
+                {computing ? ESTIMATOR.computingLabel : ESTIMATOR.submitLabel}
+              </span>
             </button>
           </div>
         </div>
@@ -212,17 +313,27 @@ export function FareEstimator() {
         )}
       >
         {result && (
-          <>
+          <div className="relative">
+            {/* Dismiss the quote; clearing `result` collapses this card back to nothing. */}
+            <button
+              type="button"
+              onClick={() => setResult(null)}
+              aria-label={ESTIMATOR.dismissLabel}
+              className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full text-fg-muted transition-colors duration-200 hover:bg-surface-2 hover:text-fg"
+            >
+              <Icon name="x" className="h-4 w-4" />
+            </button>
             <p className="text-sm text-fg-muted">{ESTIMATOR.resultPrefix}</p>
             <p className="mt-1 font-display text-3xl text-fg">
               {formatCurrency(result.low, BRAND.currencySymbol)} – {formatCurrency(result.high, BRAND.currencySymbol)}
             </p>
             <p className="mt-1 text-sm text-fg-muted">
-              {ESTIMATOR.distanceLabel(result.distanceKm)} &middot; {ESTIMATOR.etaLabel(result.etaMinutes)}
+              {ESTIMATOR.distanceLabel(result.distanceMiles)} &middot; {ESTIMATOR.etaLabel(result.etaMinutes)}
             </p>
             <p className="mt-4 text-xs text-fg-muted">{ESTIMATOR.demoNote}</p>
             <p className="mt-1 text-xs text-fg-muted">{DISCLAIMER}</p>
-          </>
+            <p className="mt-1 text-xs text-fg-muted">{ESTIMATOR.attribution}</p>
+          </div>
         )}
       </div>
     </div>

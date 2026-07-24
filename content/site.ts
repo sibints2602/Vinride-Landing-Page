@@ -6,14 +6,14 @@ export interface VehicleType {
   tagline: string;
   seats: number;
   etaMinutes: number;
-  /** Currency-formatted starting fare, e.g. "₹29". Display only. */
+  /** Currency-formatted starting fare, e.g. "$4". Display only. */
   fromFare: string;
 }
 
 export interface FareRate {
   vehicleId: VehicleTypeId;
   baseFare: number;
-  perKm: number;
+  perMile: number;
   perMinute: number;
   minimumFare: number;
 }
@@ -55,7 +55,7 @@ export const BRAND = {
   name: "Vinride",
   logoSrc: "/Viride-Logo.png",
   tagline: "Move your city.",
-  currencySymbol: "₹",
+  currencySymbol: "$",
 } as const;
 
 /** Shown anywhere a fare figure appears. Non-negotiable — the numbers are invented. */
@@ -101,49 +101,42 @@ export const ESTIMATOR = {
   heading: "Check your fare",
   rideTypeGroupLabel: "Ride type",
   pickupLabel: "Pickup",
-  pickupPlaceholder: "Enter a pickup point",
+  pickupPlaceholder: "Start typing an address",
   dropLabel: "Drop",
   dropPlaceholder: "Where to?",
   submitLabel: "Get estimate",
+  computingLabel: "Estimating…",
   resultPrefix: "Estimated fare",
-  distanceLabel: (km: number) => `${km} km`,
+  dismissLabel: "Dismiss estimate",
+  distanceLabel: (miles: number) => `${miles} mi`,
   etaLabel: (minutes: number) => `~${minutes} min`,
   demoNote: "Demo estimate — this does not book a ride.",
+  /** Attribution required by the OSM/OSRM usage policies powering the live distance. */
+  attribution: "Distance & routing via OpenStreetMap and OSRM.",
   errors: {
     pickupRequired: "Add a pickup point.",
     dropRequired: "Add a drop location.",
     sameLocation: "Pickup and drop can't be the same place.",
-    /** Defensive fallback for estimateFare's thrown errors — never let a raw Error reach the DOM. */
+    /** Shown when the live services fail or return no route — never let a raw Error reach the DOM. */
     generic: "Couldn't estimate that route. Try a different pickup or drop.",
   },
 } as const;
 
-/** Placeholder localities powering the input datalists. */
-export const LOCALITIES: string[] = [
-  "City Centre",
-  "Airport Terminal 1",
-  "Central Railway Station",
-  "Tech Park",
-  "University Campus",
-  "Riverside Mall",
-  "Old Town",
-  "Stadium Road",
-];
-
 export const VEHICLE_TYPES: VehicleType[] = [
-  { id: "bike", label: "Bike", tagline: "Beat the traffic, solo.", seats: 1, etaMinutes: 2, fromFare: "₹29" },
-  { id: "auto", label: "Auto", tagline: "Short hops, fair meters.", seats: 3, etaMinutes: 3, fromFare: "₹45" },
-  { id: "sedan", label: "Sedan", tagline: "Comfort for the everyday commute.", seats: 4, etaMinutes: 4, fromFare: "₹89" },
-  { id: "suv", label: "SUV", tagline: "Room for the whole crew.", seats: 6, etaMinutes: 6, fromFare: "₹149" },
-  { id: "outstation", label: "Outstation", tagline: "City to city, one fare.", seats: 4, etaMinutes: 15, fromFare: "₹1,499" },
+  { id: "bike", label: "Bike", tagline: "Beat the traffic, solo.", seats: 1, etaMinutes: 2, fromFare: "$4" },
+  { id: "auto", label: "Auto", tagline: "Short hops, fair meters.", seats: 3, etaMinutes: 3, fromFare: "$5" },
+  { id: "sedan", label: "Sedan", tagline: "Comfort for the everyday commute.", seats: 4, etaMinutes: 4, fromFare: "$8" },
+  { id: "suv", label: "SUV", tagline: "Room for the whole crew.", seats: 6, etaMinutes: 6, fromFare: "$12" },
+  { id: "outstation", label: "Outstation", tagline: "City to city, one fare.", seats: 4, etaMinutes: 15, fromFare: "$60" },
 ];
 
+// USD, per-mile. Invented but plausible US rideshare rates; the estimator applies these to a real distance.
 export const FARE_RATES: FareRate[] = [
-  { vehicleId: "bike", baseFare: 15, perKm: 6, perMinute: 0.5, minimumFare: 29 },
-  { vehicleId: "auto", baseFare: 25, perKm: 11, perMinute: 0.8, minimumFare: 45 },
-  { vehicleId: "sedan", baseFare: 45, perKm: 16, perMinute: 1.2, minimumFare: 89 },
-  { vehicleId: "suv", baseFare: 70, perKm: 22, perMinute: 1.6, minimumFare: 149 },
-  { vehicleId: "outstation", baseFare: 500, perKm: 14, perMinute: 1, minimumFare: 1499 },
+  { vehicleId: "bike", baseFare: 1.5, perMile: 0.9, perMinute: 0.15, minimumFare: 4 },
+  { vehicleId: "auto", baseFare: 2, perMile: 1.1, perMinute: 0.2, minimumFare: 5 },
+  { vehicleId: "sedan", baseFare: 2.5, perMile: 1.6, perMinute: 0.3, minimumFare: 8 },
+  { vehicleId: "suv", baseFare: 4, perMile: 2.2, perMinute: 0.4, minimumFare: 12 },
+  { vehicleId: "outstation", baseFare: 20, perMile: 1.4, perMinute: 0.2, minimumFare: 60 },
 ];
 
 /** Visually hidden heading naming the stats strip region for screen-reader users. */

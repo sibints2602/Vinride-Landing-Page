@@ -1,13 +1,13 @@
-const WHOLE_RUPEE_FORMATTER = new Intl.NumberFormat("en-IN", {
+const WHOLE_NUMBER_FORMATTER = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-/** Formats rupees with Indian digit grouping — single source of truth for currency display. */
+/** Formats a whole-number amount with digit grouping — single source of truth for currency display. */
 export function formatCurrency(value: number, symbol: string): string {
-  return `${symbol}${WHOLE_RUPEE_FORMATTER.format(value)}`;
+  return `${symbol}${WHOLE_NUMBER_FORMATTER.format(value)}`;
 }
 
-const FIXED_ONE_DECIMAL_FORMATTER = new Intl.NumberFormat("en-IN", {
+const FIXED_ONE_DECIMAL_FORMATTER = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
