@@ -25,12 +25,17 @@ const TILE_TINTS = [
 
 // Shared-release transform stacking (native sticky can't); STACK_TOP centers the deck on the preview.
 const STACK_TOP_REM = 12;
+// The preview pins here (matches its `top-24` = 6rem) but releases on the SAME frame as the deck,
+// so image and cards let go together instead of the image clinging via native sticky.
+const PREVIEW_TOP_REM = 6;
 const CARD_STEP_REM = 1.5;
 // Buried cards shrink `RECEDE` per covering card, easing in over `RECEDE_RAMP_PX` of scroll.
 const RECEDE = 0.05;
 const RECEDE_RAMP_PX = 160;
-// Flow gap = dwell as the front card; no tail after the last so the deck releases on landing.
-const CARD_GAP = "46vh";
+// Flow gap = dwell as each card leads. The last card gets the same-size tail so the
+// finished stack settles and holds a beat before the whole deck releases.
+const CARD_GAP_VH = 46;
+const CARD_GAP = `${CARD_GAP_VH}vh`;
 
 /** The plain-list rendering, shared by mobile and the reduced-motion path. */
 function PlainList({ className }: { className?: string }) {
@@ -64,6 +69,7 @@ function PlainList({ className }: { className?: string }) {
 export function RideOptions() {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const previewRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
 
   // Shared-release pinning; geometry measured once (not per frame) to avoid device-pixel wobble.
@@ -76,6 +82,7 @@ export function RideOptions() {
       parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     const n = cards.length;
     let pinStart: number[] = [];
+    let previewPinStart = 0;
     let release = 0;
     let enabled = false;
     let ticking = false;
@@ -90,8 +97,21 @@ export function RideOptions() {
       pinStart = cards.map(
         (c, i) => wrapTopAbs + c!.offsetTop - (stackTop + i * step),
       );
-      // The whole deck lets go the instant the last card lands — no frozen hold.
-      release = pinStart[n - 1];
+      // Hold the fully-stacked deck for one more card-gap after the last card lands,
+      // so it settles in place (and the cards behind it finish receding) before the
+      // section scrolls on. The tail margin below gives this hold its scroll runway.
+      release = pinStart[n - 1] + (CARD_GAP_VH / 100) * window.innerHeight;
+
+      // Preview pin point, measured at its natural (untransformed) position so the
+      // read isn't polluted by last frame's transform. Shares `release` with the deck.
+      const preview = previewRef.current;
+      if (preview) {
+        const prevTransform = preview.style.transform;
+        preview.style.transform = "";
+        const previewTopAbs = preview.getBoundingClientRect().top + window.scrollY;
+        preview.style.transform = prevTransform;
+        previewPinStart = previewTopAbs - PREVIEW_TOP_REM * rootFontPx;
+      }
     };
 
     const update = () => {
@@ -111,6 +131,15 @@ export function RideOptions() {
         }
         el.style.transform = `translate3d(0, ${ty}px, 0) scale(${1 - depth * RECEDE})`;
       });
+      // Pin the preview to top-24 the same way, releasing on the exact frame the deck does.
+      const preview = previewRef.current;
+      if (preview) {
+        const pty =
+          scrollY <= previewPinStart
+            ? 0
+            : Math.min(scrollY, release) - previewPinStart;
+        preview.style.transform = `translate3d(0, ${pty}px, 0)`;
+      }
       setActive((prev) => (prev === next ? prev : next));
     };
     const onScroll = () => {
@@ -166,7 +195,8 @@ export function RideOptions() {
                 }}
                 style={{
                   // Transform set per scroll frame; no `will-change` — it kills the glass blur.
-                  marginBottom: i < OPTIONS.length - 1 ? CARD_GAP : undefined,
+                  // Every card carries the gap now, incl. the last — its tail is the settle-and-hold runway.
+                  marginBottom: CARD_GAP,
                   zIndex: i,
                   transformOrigin: "top center",
                 }}
@@ -213,8 +243,12 @@ export function RideOptions() {
         </div>
 
         <div>
-          {/* Illustration only, keyed to the active option so the new image fades in cleanly. */}
-          <div className="sticky top-24 flex h-[34rem] items-center justify-center">
+          {/* Illustration only, keyed to the active option so the new image fades in cleanly.
+              Pinned via transform (not `sticky`) so it releases in lockstep with the card deck. */}
+          <div
+            ref={previewRef}
+            className="flex h-[34rem] items-center justify-center"
+          >
             <Image
               key={active}
               src={IMAGES[active]}
